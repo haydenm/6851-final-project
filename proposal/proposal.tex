@@ -1,0 +1,76 @@
+\documentclass[11pt]{article}
+\usepackage{fullpage}
+\usepackage{amsmath, amsfonts}
+\usepackage{complexity}
+\usepackage{nopageno}
+
+\begin{document}
+
+\begin{center} \Large
+{\scshape 6.851 Advanced Data Structures (Spring '14)} \\[1ex]
+\framebox{Project Proposal} \\[1ex]
+{\large \em By Casey O'Brien (cmobrien@mit.edu) and Hayden Metsky (hmetsky@mit.edu)} \\[2ex]
+An Experimental Comparison of Two Recent Data Structures for String Matching with Errors
+\end{center}
+
+In this project we will consider the generalized string matching problem in which, given a pattern $p$ and text $t$, we search for $p$ in $t$ with error bounds.
+In particular, we preprocess (or ``index'') $t$ so that we can quickly look for substrings of $t$ that match $p$ to within some edit distance $k = O(1)$.
+Solutions to this problem have wide-ranging applications, such as searching error-ridden text or performing a biological sequence analysis.
+
+There have been many theoretical contributions to this problem.
+In 2004, Cole et al. showed a data structure with worst-case index size $O(n \log^k n)$ and worst-case query time $O(m + \log^k n \log \log n + \text{\# matches})$, where $n = |t|$ and $m = |p|$ \cite{cole}.
+In 2005, Maa{\ss} and Nowak showed a data structure with index size on average $O(n \log^k n)$ w.h.p. and worst-case query time $O(m + \text{\# matches})$; they also showed a small modification to support worst-case index size $O(n \log^k n)$ and average query time $O(m + \text{\# matches})$ w.h.p. \cite{maas}.
+
+It is not clear from the literature how these data structures perform in practice.
+For example, the exponential dependence on $k$ in the bounds on size may render both structures impractical for many purposes but leave them practical for small $k$.
+We therefore will first implement these structures independently, and test and tune their practical performance.
+Furthermore, these two data structures clearly have similar bounds in theory, but constant factors may cause them to perform very differently in practice, especially when comparing them for different values of $n$, $m$, and $k$.
+Thus, we will also compare the performance of the two with real data sets.
+
+\
+
+\textbf{[[[COLE ET AL SUMMARY HERE]]]}
+
+While Cole et al. provides worst-case upper bounds, Maa{\ss} and Nowak improve on these bounds in the average-case \cite{maas}.
+Their fundamental idea is to store $k+1$ sets, each consisting of (modified) suffixes of $t$, that allow a query for prefixes of these suffixes that have different error bounds up to $k$.
+In particular they store each of these sets in what they call an ``error tree'' (a type of trie) in which the $i$th has height $h_i$ for $0 \leq i \leq k$.
+The trees are inductively constructed such that the $i$th tree has $i+1$ errors before $h_i + 1$ in its suffixes.
+Then, loosely speaking, they search for $p$ in each of the error trees.
+Depending on how the parameters $h_i$ are set, the authors achieve either a worst-case bound for the index size or for the query time (and an average-case bound for the other).
+Because it is more straightforward to conduct a single pairwise comparison, we will only consider the version of this data structure with worst-case index size $O(n \log^k n)$ and average query time $O(m + \text{\# matches})$ w.h.p.; note that, in this version, the index size has the same worst-case bound as the data structure provided by Cole et al.
+
+\
+
+\textbf{[[[How we do the implementations, tune them, and test them (e.g., varying n,k, and m; checking memory size; running times, etc. Maybe make some plots...]]]}
+
+In performing these tests, we will draw on applications in computational biology.
+In particular, we will let $t$ be the human genome, which gives our text a fixed alphabet size of $4$.
+If we find that $t$ is too large to store or to search, we can easily reduce $n$ by selecting a segment of it (e.g., a chromosome).
+Our string patterns will consist of known sequence motifs.
+Motifs are rarely a fixed sequence of bases; instead, they are typically a pattern in which the base at certain indices could be one of a number ($\leq 4$) of possibilities.
+For example, \texttt{ATCG} could be an instance of the same motif as \texttt{ATCC}, where the fourth index takes on \texttt{G} or \texttt{C}.
+Hence, searching for motifs in a large sequence is a natural application of string matching with errors.
+Of course, in this application it is highly unlikely that that we would find any match for most values of $m$ (even $m = \Theta(\log n)$ would be too large).
+To test and compare the data structures for larger values of $m$, we can artificially alter the genome to ensure matches.
+
+\
+
+\textbf{[SHORT CONCLUSION]}
+
+
+\begin{thebibliography}{9}
+\bibitem{cole}
+Richard Cole, Lee-Ad Gottlieb, and Moshe Lewenstein.
+ Dictionary matching and indexing with errors and don't cares.
+ In \textit{Proc. 36th ACM Symposium on Theory of Computing (STOC)},
+ pages 91--100, 2004.
+ 
+\bibitem{maas}
+Moritz Maa{\ss} and Johannes Nowak.
+ Text indexing with errors.
+ In \textit{Proceedings of the 16th Annual Symposium on Combinatorial Pattern Matching (CPM)},
+ pages 21--32, 2005.
+ 
+\end{thebibliography}
+
+\end{document}
