@@ -3,7 +3,7 @@
 \usepackage{amsmath, amsfonts}
 \usepackage{complexity}
 \usepackage{nopageno}
-
+\setlength{\parskip}{0.8em}
 \begin{document}
 
 \begin{center} \Large
@@ -27,9 +27,10 @@ We therefore will first implement these structures independently, and test and t
 Furthermore, these two data structures clearly have similar bounds in theory, but constant factors may cause them to perform very differently in practice, especially when comparing them for different values of $n$, $m$, and $k$.
 Thus, we will also compare the performance of the two with real data sets.
 
-\
-
-\textbf{[[[COLE ET AL SUMMARY HERE]]]}
+Cole et al. presents a way to search for matches with some edit distance by modifying a single suffix tree.
+Additional subtrees are recursively added to the suffix tree in order to handle errors. 
+By decomposing the tree into centroid paths, they are able to create and store these subtrees efficiently.
+Using this structure and carefully constructed longest common prefix queries, they achieve query time $O(m + \log^k{n} \log{\log{n}} + \text{\# matches})$. 
 
 While Cole et al. provides worst-case upper bounds, Maa{\ss} and Nowak improve on these bounds in the average-case \cite{maas}.
 Their fundamental idea is to store $k+1$ sets, each consisting of (modified) suffixes of $t$, that allow a query for prefixes of these suffixes that have different error bounds up to $k$.
@@ -39,9 +40,14 @@ Then, loosely speaking, they search for $p$ in each of the error trees.
 Depending on how the parameters $h_i$ are set, the authors achieve either a worst-case bound for the index size or for the query time (and an average-case bound for the other).
 Because it is more straightforward to conduct a single pairwise comparison, we will only consider the version of this data structure with worst-case index size $O(n \log^k n)$ and average query time $O(m + \text{\# matches})$ w.h.p.; note that, in this version, the index size has the same worst-case bound as the data structure provided by Cole et al.
 
-\
+Both data structures will be implemented in C.
+Once the structures have been implemented, we will begin to compare them across a variety of values for $n$, $m$, and $k$.
+A particularly interesting question will be how they perform when $p$ is long, namely $m = \Omega(\log^k{n})$, because at this point both structures will have equivalent query bounds.
+We will also be interested to see how the structures are able to scale for larger values of $k$.
+The structures will be compared both in terms of query time and space (note that they both use space $O(n\log^k{n})$).
+It will be interesting to see how larger $n$ and $k$ can become before the structures take up too much memory for our computers to handle. 
 
-\textbf{[[[How we do the implementations, tune them, and test them (e.g., varying n,k, and m; checking memory size; running times, etc. Maybe make some plots...]]]}
+%\textbf{[[[How we do the implementations, tune them, and test them (e.g., varying n,k, and m; checking memory size; running times, etc. Maybe make some plots...]]]}
 
 In performing these tests, we will draw on applications in computational biology.
 In particular, we will let $t$ be the human genome, which gives our text a fixed alphabet size of $4$.
@@ -50,13 +56,11 @@ Our string patterns will consist of known sequence motifs.
 Motifs are rarely a fixed sequence of bases; instead, they are typically a pattern in which the base at certain indices could be one of a number ($\leq 4$) of possibilities.
 For example, \texttt{ATCG} could be an instance of the same motif as \texttt{ATCC}, where the fourth index takes on \texttt{G} or \texttt{C}.
 Hence, searching for motifs in a large sequence is a natural application of string matching with errors.
-Of course, in this application it is highly unlikely that that we would find any match for most values of $m$ (even $m = \Theta(\log n)$ would be too large).
+Of course, in this application it is highly unlikely that we would find any match for most values of $m$ (even $m = \Theta(\log n)$ would be too large).
 To test and compare the data structures for larger values of $m$, we can artificially alter the genome to ensure matches.
 
-\
-
-\textbf{[SHORT CONCLUSION]}
-
+By implementing these data structures we hope to gain a better understanding of how the problem of string matching with errors can be solved in practice, and also to see the limitations of current solutions.
+We anticipate that neither data structure will completely dominate the other, and thus hope to determine the circumstances under which each structure performs best.
 
 \begin{thebibliography}{9}
 \bibitem{cole}
