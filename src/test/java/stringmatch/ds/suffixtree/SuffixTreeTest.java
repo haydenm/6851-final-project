@@ -25,9 +25,9 @@ public class SuffixTreeTest {
     
     SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(inputText);
     SuffixTree st = suffixTreeBuilder.build();
-    assertEquals("[BANANA$, A, $, NA, $, NA$, NA, $, NA$, $]", 
+    assertEquals("[$, A, $, NA, $, NA$, BANANA$, NA, $, NA$]", 
         st.getRoot().getEdgeStringsInDFS().toString());
-    assertEquals("[BANANA$, A, NA, $, $, NA, $, NA$, $, NA$]",
+    assertEquals("[$, A, BANANA$, NA, $, NA, $, NA$, $, NA$]",
         st.getRoot().getEdgeStringsInBFS().toString());
     
     List<String> allSuffixesAsStrings = new ArrayList<String>();

@@ -2,7 +2,7 @@ package stringmatch.ds.suffixtree;
 
 import stringmatch.ds.text.TextSubstring;
 
-public class Edge {
+public class Edge implements Comparable<Edge> {
 
   private Node fromNode;
   private Node toNode;
@@ -56,6 +56,11 @@ public class Edge {
   
   public String toString() {
 	  return getTextSubstring().getSubstringAsText().toString();
+  }
+
+  @Override
+  public int compareTo(Edge o) {
+    return getTextSubstring().compareTo(o.getTextSubstring());
   }
   
 }

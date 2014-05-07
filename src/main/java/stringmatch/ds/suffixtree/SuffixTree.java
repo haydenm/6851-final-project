@@ -280,7 +280,7 @@ public class SuffixTree {
     
     protected SuffixTree build() {
       processPrefixes();
-      root.putNodesAtLeaves(0);
+      root.sortEdgesAndPutNodesAtLeaves(0);
       return new SuffixTree(this);
     }
     

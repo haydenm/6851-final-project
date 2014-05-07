@@ -1,6 +1,6 @@
 package stringmatch.ds.text;
 
-public class TextSubstring {
+public class TextSubstring implements Comparable<TextSubstring> {
 
   public Text text;
   public int start;
@@ -76,6 +76,22 @@ public class TextSubstring {
   public int hashCode() {
     // Forget the text; just compare the indices.
     return (start + 31*length);
+  }
+
+  @Override
+  public int compareTo(TextSubstring o) {
+    int minLength = length < o.length ? length : o.length; 
+    for (int i = 0; i < minLength; i++) {
+      int c = getIthChar(i).compareTo(o.getIthChar(i));
+      if (c != 0)
+        return c;
+    }
+    if (length < o.length)
+      return -1;
+    else if (length > o.length)
+      return +1;
+    else
+      return 0;
   }
   
 }

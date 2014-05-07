@@ -1,6 +1,7 @@
 package stringmatch.ds.suffixtree;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -105,11 +106,12 @@ public class Node {
     suffixLink = node;
   }
   
-  protected void putNodesAtLeaves(int height) {
+  protected void sortEdgesAndPutNodesAtLeaves(int height) {
+    Collections.sort(outgoingEdges);
     for (Edge outgoingEdge : outgoingEdges) {
       int outgoingEdgeHeight = outgoingEdge.getTextSubstring().getLength();
       if (outgoingEdge.getToNode() != null) {
-        outgoingEdge.getToNode().putNodesAtLeaves(height + outgoingEdgeHeight);
+        outgoingEdge.getToNode().sortEdgesAndPutNodesAtLeaves(height + outgoingEdgeHeight);
       } else {
         int offset = outgoingEdge.getTextSubstring().getText().getLength() - 
             (height + outgoingEdgeHeight);
