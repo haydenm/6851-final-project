@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.List;
 
 public class Node {
 
@@ -44,7 +45,7 @@ public class Node {
 	}
 
 	public char toChar() {
-		if (s != null && s.length() == 1)
+		if (s != null && s.length() >= 1)
 			return s.charAt(0);
 		else
 			throw new InternalError(s);
@@ -56,6 +57,61 @@ public class Node {
 				if (n.toChar() == charAt)
 					return n;
 		return extend(charAt);
+	}
+
+	public Node get(char charAt) {
+		if (childs != null) {
+			for (Node n : childs) {
+				if (n.toChar() == charAt) {
+					return n;
+				}
+			}
+		}
+		return null;
+	}
+	
+	public List<Pair<String, Integer>> getStrings() {
+		List<Pair<String, Integer>> strings = new ArrayList<Pair<String, Integer>>();
+		if (childs == null || childs.size() == 0) {
+			strings.add(new Pair<String, Integer>(s, offset));
+		} else {
+			for (Node n: childs) {
+				n.getStringsHelper(strings, "");
+			}
+		}
+		return strings;
+	}
+	
+	public void getStringsHelper(List<Pair<String, Integer>> strings, String current) {
+		if (childs == null || childs.size() == 0) {
+			strings.add(new Pair<String, Integer>(current + s, offset));
+		} else {
+			for (Node n: childs) {
+				n.getStringsHelper(strings, current + s);
+			}
+		}
+	}
+	
+	public List<Integer> leafIndices() {
+		List<Integer> leaves = new ArrayList<Integer>();
+		if (childs == null || childs.size() == 0) {
+			leaves.add(offset);
+		} else {
+			for (Node n: childs) {
+				n.getDescendants(leaves);
+			}
+		}
+		return leaves;
+	}
+	
+	public void getDescendants(List<Integer> leaves) {
+		if (childs == null || childs.size() == 0) {
+			leaves.add(offset);
+		} else {
+			for (Node n: childs) {
+				n.getDescendants(leaves);
+			}
+		}
 	}
 
 	public boolean hasOneChild() {
