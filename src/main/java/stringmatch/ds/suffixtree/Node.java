@@ -10,24 +10,30 @@ import stringmatch.ds.text.TextSubstring;
 
 public class Node {
 
-  private List<Edge> outgoingEdges;
-  private Node suffixLink;
+  protected Edge incomingEdge;
+  protected List<Edge> outgoingEdges;
+  protected Node suffixLink;
   
-  private int numChildren;
-  private Edge centroidEdge;
-  private boolean isLeaf;
+  protected int numLeaves;
   
-  protected Node() {
+  protected Edge centroidEdge;
+  protected boolean isLeaf;
+  protected int leafIndex;
+  
+  protected Node(Edge incomingEdge) {
+    this.incomingEdge = incomingEdge;
     outgoingEdges = new ArrayList<Edge>();
     suffixLink = null;
-    numChildren = 0;
+    numLeaves = -1;
     centroidEdge = null;
     isLeaf = false;
+    leafIndex = -1;
   }
   
-  protected Node(boolean isLeaf) {
-    this();
+  protected Node(Edge incomingEdge, boolean isLeaf, int leafIndex) {
+    this(incomingEdge);
     this.isLeaf = isLeaf;
+    this.leafIndex = leafIndex;
   }
   
   protected List<Edge> getOutgoingEdges() {
@@ -56,32 +62,16 @@ public class Node {
     suffixLink = node;
   }
   
-  protected void putNodesAtLeaves() {
+  protected void putNodesAtLeaves(int height) {
     for (Edge outgoingEdge : outgoingEdges) {
+      int outgoingEdgeHeight = outgoingEdge.getTextSubstring().getLength();
       if (outgoingEdge.getToNode() != null) {
-        outgoingEdge.getToNode().putNodesAtLeaves();
+        outgoingEdge.getToNode().putNodesAtLeaves(height + outgoingEdgeHeight);
       } else {
-        Node leaf = new Node(true);
+        int offset = outgoingEdge.getTextSubstring().getText().getLength() - 
+            (height + outgoingEdgeHeight);
+        Node leaf = new Node(outgoingEdge, true, offset);
         outgoingEdge.setToNode(leaf);
-      }
-    }
-  }
-  
-  protected void findCentroidPaths() {
-    numChildren = 0;
-    int maxNumberOfChildren = 0;
-    for (Edge outgoingEdge : outgoingEdges) {
-      // In each child, count the number of their children.
-      outgoingEdge.getToNode().findCentroidPaths();
-      
-      // Add up this node's number of children.
-      numChildren += 1 + outgoingEdge.getToNode().numChildren;
-      
-      // Find the max number of children. And keep track of the heaviest
-      // children, breaking ties arbitrarily.
-      if (outgoingEdge.getToNode().numChildren >= maxNumberOfChildren) {
-        maxNumberOfChildren = outgoingEdge.getToNode().numChildren;
-        centroidEdge = outgoingEdge;
       }
     }
   }

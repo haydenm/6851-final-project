@@ -38,7 +38,7 @@ public class SuffixTree {
     private Text inputText;
     
     public Builder(Text inputText) {
-      root = new Node();
+      root = new Node(null);
       activePoint = new ActivePoint(root);
       insertsAtStep = 0;
       lastInsertedNode = null;
@@ -166,7 +166,7 @@ public class SuffixTree {
         activePoint.moveToActiveEdgeEndpointIfNeeded();
       } else {
         // Split the edge: activeEdge -> newNode -> newEdge, oldEdge
-        Node newNode = new Node();
+        Node newNode = new Node(activePoint.getActiveEdge());
         Edge newEdge = new Edge(newNode, substr.getEndIndex() - 1, this);
         newNode.addOutgoingEdge(newEdge);
         int oldEdgeTextStartIndex = activePoint.getActiveEdge().
@@ -197,7 +197,7 @@ public class SuffixTree {
     
     protected SuffixTree build() {
       processPrefixes();
-      root.putNodesAtLeaves();
+      root.putNodesAtLeaves(0);
       return new SuffixTree(this);
     }
     

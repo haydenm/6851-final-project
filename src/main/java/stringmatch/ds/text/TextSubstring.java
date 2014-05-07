@@ -15,7 +15,12 @@ public class TextSubstring {
     this.length = length;
   }
   
+  public Text getText() {
+    return text;
+  }
+  
   public Text getSubstringAsText() {
+    System.out.println(start + " " + length);
     return text.extractSubstring(start, start + length);
   }
   
