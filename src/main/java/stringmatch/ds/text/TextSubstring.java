@@ -15,6 +15,10 @@ public class TextSubstring {
     this.length = length;
   }
   
+  public Text getText() {
+    return text;
+  }
+  
   public String toString() {
 	  return getSubstringAsText().toString();
   }
