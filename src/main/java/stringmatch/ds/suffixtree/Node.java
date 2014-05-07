@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
 import stringmatch.ds.text.TextSubstring;
 
@@ -34,6 +35,48 @@ public class Node {
     this(incomingEdge);
     this.isLeaf = isLeaf;
     this.leafIndex = leafIndex;
+  }
+  
+  /*protected Edge follow(Text p, int start) {
+	  for (Edge e: outgoingEdges) {
+		  boolean match = true;
+		  TextSubstring edgeSubstring = e.getTextSubstring();
+		  TextSubstring next = new TextSubstring(p, start, Math.min(edgeSubstring.getLength(), p.getLength() - start));
+		  String edgeString = edgeSubstring.toString();
+		  String nextString = next.toString();
+		  System.out.println(edgeString);
+		  System.out.println(nextString);
+		  for (int i = 0; i < Math.min(edgeSubstring.length, p.getLength() - start); i++) {
+			  System.out.println(edgeString.charAt(i));
+			  System.out.println(nextString.charAt(i));
+			  if (edgeString.charAt(i) != nextString.charAt(i)) {
+				  match = false;
+			  }
+		  }
+		  if (match) {
+			  return e;
+		  }
+	  }
+	return null;
+  }*/
+  
+  protected Edge follow(AlphabetCharacter c) {
+	  for (Edge e: outgoingEdges) {
+		  TextSubstring edgeSubstring = e.getTextSubstring();
+		  AlphabetCharacter first = edgeSubstring.getIthChar(0);
+		  if (c.equals(first)) {
+			  return e;
+		  }
+	  }
+	  return null;
+  }
+  
+  public String toString() {
+	  if (isLeaf) {
+		  return "LEAF";
+	  } else {
+		  return outgoingEdges.toString();
+	  }
   }
   
   protected List<Edge> getOutgoingEdges() {

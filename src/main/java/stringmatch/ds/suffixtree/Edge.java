@@ -54,4 +54,8 @@ public class Edge {
     return toNode;
   }
   
+  public String toString() {
+	  return getTextSubstring().getSubstringAsText().toString();
+  }
+  
 }

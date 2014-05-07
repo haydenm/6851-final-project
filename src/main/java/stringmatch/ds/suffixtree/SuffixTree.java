@@ -1,8 +1,12 @@
 package stringmatch.ds.suffixtree;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
 import stringmatch.ds.text.TextSubstring;
+import stringmatch.ds.suffixtree.Node;
 
 /*
  * Stores a suffix tree.
@@ -25,6 +29,85 @@ public class SuffixTree {
   
   public Node getRoot() {
     return root;
+  }
+  
+  /* 
+   * Checks that following an edge matches all the characters along the edge. If allowWildcards
+   * is set, then all characters except AlphabetCharacter.END_CHAR are matched to
+   * AlphabetCharacter.WILDCARD.
+   */
+  private boolean checkMatch(Text p, int start, Edge e, boolean allowWildcards) {
+	  if (e != null) {
+		  for (int i = 0; i < Math.min(e.getTextSubstring().length, p.getLength() - start); i++) {
+			  AlphabetCharacter nextOnEdge = e.getTextSubstring().getIthChar(i);
+			  AlphabetCharacter nextInPattern = p.getCharAtIndex(start + i);
+			  if (!nextOnEdge.equals(nextInPattern)) {
+				  if (!(allowWildcards && wildcardMatch(nextOnEdge, nextInPattern))) {
+					  return false;  
+				  }
+			  }
+		  }
+		  return true;
+	  }
+	  return false;
+  }
+  
+  /*
+   * Returns the node corresponding to the longest common prefix of p with the suffix tree,
+   * or null if there is no such prefix. No wildcards allowed.
+   */
+  public Node query(Text p) {
+	  return queryHelper(p, 0, root);
+  }
+  
+  private Node queryHelper(Text p, int start, Node current) {
+	  if (start >= p.getSize()) {
+		  return current;
+	  }
+	  Edge e = current.follow(p.getCharAtIndex(start));
+	  if (checkMatch(p, start, e, false)) {
+		  return queryHelper(p, start + e.getTextSubstring().length, e.getToNode());
+	  }
+	  return null;
+  }
+  
+  public boolean wildcardMatch(AlphabetCharacter nextOnEdge, AlphabetCharacter nextInPattern) {
+	  return (nextInPattern.isWild() && !nextOnEdge.isEnd());
+  }
+  
+  /*
+   * Returns the node corresponding to the longest common prefix of p with the suffix tree,
+   * or null if there is no such prefix. Allows wildcards.
+   */
+  public List<Node> naiveWildcardQuery(Text p) {
+	  return naiveWildcardQueryHelper(p, 0, root);
+  }
+  
+  private List<Node> naiveWildcardQueryHelper(Text p, int start, Node current) {
+	  List<Node> results = new ArrayList<Node>();
+	  if (start >= p.getSize()) {
+		  results.add(current);
+		  return results;
+	  }
+	  Edge e = current.follow(p.getCharAtIndex(start));
+	  if (checkMatch(p, start, e, true)) {
+		  results.addAll(naiveWildcardQueryHelper(p, start + e.getTextSubstring().length, e.getToNode()));
+	  }
+	  for (Edge next: current.getOutgoingEdges()) {
+		  if (p.getCharAtIndex(start).isWild()) {
+			  if (checkMatch(p, start, next, true)) {
+				  results.addAll(naiveWildcardQueryHelper(p, start + next.getTextSubstring().length, next.getToNode()));
+			  }
+		  }
+	  }
+	  return results;
+  }
+  
+  public static void main(String[] args) {
+	    SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(new Text("BANANA", true));
+	    SuffixTree st = suffixTreeBuilder.build();
+	    Text queryText = new Text("AN*", false);
+	    System.out.println(st.naiveWildcardQuery(queryText));
   }
   
   public static class Builder {

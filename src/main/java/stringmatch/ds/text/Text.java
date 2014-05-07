@@ -11,6 +11,17 @@ public class Text {
     this.text = builder.text;
   }
   
+  public Text(String s, boolean endChar) {
+	  Builder builder = new Builder();
+	  for (char c : s.toCharArray()) {
+	    builder.addAlphabetCharacter(new AlphabetCharacter(new Character(c)));
+	  }
+	  if (endChar) {
+	    builder.addAlphabetCharacter(AlphabetCharacter.END_CHAR);
+	  }
+	  this.text = builder.text;
+  }
+  
   public int getLength() {
     return text.size();
   }
@@ -47,6 +58,10 @@ public class Text {
       sb.append(ac.toString());
     }
     return sb.toString();
+  }
+  
+  public int getSize() {
+	  return text.size();
   }
   
   public static class Builder {
