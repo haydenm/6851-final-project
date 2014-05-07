@@ -2,9 +2,9 @@ package stringmatch.ds.text;
 
 public class TextSubstring {
 
-  private Text text;
-  private int start;
-  private int length;
+  public Text text;
+  public int start;
+  public int length;
   
   public TextSubstring(Text text, int start, int length) {
     if (start < 0 || start + length > text.getLength())
@@ -13,6 +13,10 @@ public class TextSubstring {
     this.text = text;
     this.start = start;
     this.length = length;
+  }
+  
+  public String toString() {
+	  return getSubstringAsText().toString();
   }
   
   public Text getSubstringAsText() {

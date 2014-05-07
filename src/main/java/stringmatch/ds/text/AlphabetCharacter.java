@@ -24,6 +24,14 @@ public class AlphabetCharacter {
     return character.hashCode();
   }
   
+  public boolean isWild() {
+	  return this.equals(WILDCARD);
+  }
+  
+  public boolean isEnd() {
+	  return this.equals(END_CHAR);
+  }
+  
   public String toString() {
     return character.toString();
   }
