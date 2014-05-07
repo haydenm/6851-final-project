@@ -1,5 +1,6 @@
 package stringmatch.ds.suffixtree;
 
+import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.TextSubstring;
 
 public class Edge {
@@ -11,6 +12,7 @@ public class Edge {
   private boolean textEndsAtTreeEnd;
   private SuffixTree.Builder treeBuilder;
   private TextSubstring textSubstring;
+  boolean wildcard;
     
   protected Edge(Node fromNode, TextSubstring textSubstring) {
     this.fromNode = fromNode;
@@ -18,6 +20,7 @@ public class Edge {
     textEndsAtTreeEnd = false;
     treeBuilder = null;
     this.textSubstring = textSubstring;
+    wildcard = false;
   }
   
   protected Edge(Node fromNode, int textStart,
@@ -28,11 +31,23 @@ public class Edge {
     textEndsAtTreeEnd = true;
     this.treeBuilder = treeBuilder;
     textSubstring = null;
+    wildcard = false;
+  }
+  
+  protected Edge(Node fromNode, int textStart, TextSubstring textSubstring, boolean wildcard) {
+	    this.fromNode = fromNode;
+	    toNode = null;
+	    this.textStart = textStart;
+	    textEndsAtTreeEnd = false;
+	    treeBuilder = null;
+	    this.textSubstring = textSubstring;
+	    this.wildcard = wildcard;
   }
   
   protected void setToNode(Node node) {
     toNode = node;
   }
+ 
   
   protected void setTextSubstring(TextSubstring textSubstring) {
     this.textSubstring = textSubstring;
@@ -54,8 +69,24 @@ public class Edge {
     return toNode;
   }
   
+  public AlphabetCharacter getCharAt(int i) {
+	  if (wildcard && i == 0) {
+		  return AlphabetCharacter.WILDCARD;
+	  } else {
+		  return getTextSubstring().getIthChar(i);
+	  }
+  }
+  
   public String toString() {
+	  if (wildcard) {
+		  String original = getTextSubstring().getSubstringAsText().toString();
+		  return "*" + original.substring(1, original.length());
+	  }
 	  return getTextSubstring().getSubstringAsText().toString();
   }
+
+public int getTextStart() {
+	return textStart;
+}
   
 }

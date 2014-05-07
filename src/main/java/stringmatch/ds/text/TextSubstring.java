@@ -48,6 +48,10 @@ public class TextSubstring {
     return length;
   }
   
+  public Text getText() {
+		return text;
+  }
+  
   // Returns a concatenation of two TextSubstrings.
   // Because we work with a compressed trie, they don't necessarily need
   // to be adjacent! (the strings themselves are, but not necessarily the indices)
@@ -73,5 +77,6 @@ public class TextSubstring {
     // Forget the text; just compare the indices.
     return (start + 31*length);
   }
+
   
 }

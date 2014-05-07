@@ -11,7 +11,7 @@ import stringmatch.ds.text.TextSubstring;
 
 public class Node {
 
-  private List<Edge> outgoingEdges;
+  List<Edge> outgoingEdges;
   private Node suffixLink;
   
   private int numChildren;
@@ -63,6 +63,21 @@ public class Node {
 		  }
 	  }
 	  return null;
+  }
+  
+  protected Node clone() {
+	  Node n = new Node();
+	  List<Edge> out = new ArrayList<Edge>();
+	  for (Edge e: outgoingEdges) {
+		  TextSubstring sub = new TextSubstring(e.getTextSubstring().getText(),
+				  								e.getTextSubstring().getStartIndex(),
+				  								e.getTextSubstring().getLength());
+		  Edge copy = new Edge(n, e.getTextStart(), sub, e.wildcard);
+		  copy.setToNode(e.getToNode().clone());
+		  out.add(copy);
+	  }
+	  n.outgoingEdges = out;
+	  return n;
   }
   
   public String toString() {

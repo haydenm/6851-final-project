@@ -103,11 +103,33 @@ public class SuffixTree {
 	  return results;
   }
   
+  public void printTree() {
+	  printTreeHelper("", root, "ROOT", true);
+  }
+  
+	public void printTreeHelper(String prefix, Node n, String label, boolean leaf) {
+        System.out.println(prefix + (leaf ? "|-- " : "|-- ") + label);
+       // System.out.println(n);
+        if (n.outgoingEdges != null && n.outgoingEdges.size() > 0) {
+        for (int i = 0; i < n.outgoingEdges.size() - 1; i++) {
+        	Edge e = n.outgoingEdges.get(i);
+        	String l = e.toString();
+            printTreeHelper(prefix + (leaf ? "    " : "|   "), e.getToNode(), l, false);
+        }
+        if (n.outgoingEdges.size() >= 1) {
+        	Edge e = n.outgoingEdges.get(n.outgoingEdges.size() - 1);
+        	String l = e.toString();
+            printTreeHelper(prefix + (leaf ?"    " : "|   "), e.getToNode(), l, true);
+        }
+        }
+    }
+  
   public static void main(String[] args) {
-	    SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(new Text("BANANA", true));
+	    /*SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(new Text("BANANA", true));
 	    SuffixTree st = suffixTreeBuilder.build();
 	    Text queryText = new Text("AN*", false);
 	    System.out.println(st.naiveWildcardQuery(queryText));
+	    st.printTree();*/
   }
   
   public static class Builder {
@@ -285,5 +307,7 @@ public class SuffixTree {
     }
     
   }
+  
+  
   
 }
