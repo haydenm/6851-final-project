@@ -46,20 +46,6 @@ public class SuffixTree {
     return root;
   }
 
-  /*
-   * Checks that following an edge matches all the characters along the edge. If
-   * allowWildcards is set, then all characters except
-   * AlphabetCharacter.END_CHAR are matched to AlphabetCharacter.WILDCARD.
-=======
-  
-  public List<TextSubstring> getAllSuffixes() {
-    return root.getAllSuffixes();
-  }
-  
-  public List<TextSubstring> getAllSuffixes() {
-    return root.getAllSuffixes();
-  }
-  
   public List<TextSubstring> getAllSuffixes() {
     return root.getAllSuffixes();
   }
@@ -68,7 +54,6 @@ public class SuffixTree {
    * Checks that following an edge matches all the characters along the edge. If allowWildcards
    * is set, then all characters except AlphabetCharacter.END_CHAR are matched to
    * AlphabetCharacter.WILDCARD.
->>>>>>> Stashed changes
    */
   private boolean checkMatch(Text p, int start, Edge e, boolean allowWildcards) {
     if (e != null) {
