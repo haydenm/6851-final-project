@@ -36,7 +36,6 @@ public class SuffixTree {
   
   private SuffixTree(Builder builder) {
     root = builder.root;
-    fixIncomingEdges();
     LCAOrder = eulerTour();
     LCATable = buildLCATable();
     MATable = buildMATable();
@@ -290,18 +289,6 @@ public class SuffixTree {
     }
   }
 
-  public void fixIncomingEdges() {
-    recFixIncomingEdges(root);
-  }
-
-  public void recFixIncomingEdges(Node node) {
-    for (Edge e : node.outgoingEdges) {
-      Node n = e.getToNode();
-      n.incomingEdge = e;
-      recFixIncomingEdges(n);
-    }
-  }
-
   public static void main(String[] args) {
     SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(new Text(
         "BANANA", true));
@@ -471,12 +458,15 @@ public class SuffixTree {
               oldEdgeTextStartIndex));
         }
         oldEdge.setToNode(activePoint.getActiveEdge().getToNode());
+        if (activePoint.getActiveEdge() != null && activePoint.getActiveEdge().getToNode() != null)
+          activePoint.getActiveEdge().getToNode().setIncomingEdge(oldEdge);
         newNode.addOutgoingEdge(oldEdge);
         activePoint.getActiveEdge().setToNode(newNode);
         activePoint.getActiveEdge().setTextSubstring(
             new TextSubstring(inputText, activePoint.getActiveEdge()
                 .getTextSubstring().getStartIndex(), activePoint
                 .getActiveLength()));
+
         if (insertsAtStep > 0)
           lastInsertedNode.setSuffixLink(newNode);
         lastInsertedNode = newNode;

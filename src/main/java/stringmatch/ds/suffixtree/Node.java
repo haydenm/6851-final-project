@@ -146,6 +146,10 @@ public class Node {
     for (Edge outgoingEdge : outgoingEdges) {
       outgoingEdge.fixTextSubstringAfterBuild();
       int outgoingEdgeHeight = outgoingEdge.getTextSubstring().getLength();
+      
+      if (outgoingEdge.getToNode() != null && outgoingEdge.getToNode().incomingEdge != outgoingEdge)
+        throw new RuntimeException("Mismatched incomingEdge");
+      
       if (outgoingEdge.getToNode() != null) {
         outgoingEdge.getToNode().sortEdgesAndPutNodesAtLeaves(height + outgoingEdgeHeight);
       } else {
