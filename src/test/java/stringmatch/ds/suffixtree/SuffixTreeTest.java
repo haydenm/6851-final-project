@@ -25,16 +25,16 @@ public class SuffixTreeTest {
     
     SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(inputText);
     SuffixTree st = suffixTreeBuilder.build();
-    assertEquals("[$, A, $, NA, $, NA$, BANANA$, NA, $, NA$]", 
+    assertEquals("[A, $, NA, $, NA$, BANANA$, NA, $, NA$]", 
         st.getRoot().getEdgeStringsInDFS().toString());
-    assertEquals("[$, A, BANANA$, NA, $, NA, $, NA$, $, NA$]",
+    assertEquals("[A, BANANA$, NA, $, NA, $, NA$, $, NA$]",
         st.getRoot().getEdgeStringsInBFS().toString());
     
     List<String> allSuffixesAsStrings = new ArrayList<String>();
     for (TextSubstring x : st.getRoot().getAllSuffixes()) {
       allSuffixesAsStrings.add(x.getSubstringAsText().toString());
     }
-    String[] trueSuffixes = new String[] { "$", "A$", "NA$", "ANA$",
+    String[] trueSuffixes = new String[] { "A$", "NA$", "ANA$",
         "NANA$", "ANANA$", "BANANA$" };
     assertEquals(trueSuffixes.length, allSuffixesAsStrings.size());
     for (String x : trueSuffixes) {
@@ -108,6 +108,13 @@ public class SuffixTreeTest {
 	  expected.add(node2);
 	  expected.add(node3);
 	  assertEquals(expected, st.naiveWildcardQuery(new Text("**", false)));
+  }
+  
+  @Test
+  public void testWildcardSubtree() {
+    SuffixTreeNaiveBigSpace.Builder suffixTreeBuilder = new SuffixTreeNaiveBigSpace.Builder(new Text("BANANA", true));
+    SuffixTreeNaiveBigSpace st = suffixTreeBuilder.build();
+    st.printTree();
   }
   
 }

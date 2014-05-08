@@ -23,13 +23,17 @@ import stringmatch.ds.suffixtree.Node;
 public class SuffixTree {
 
   protected Node root;
+  
   private List<Pair<Integer, Node>> LCAOrder;
   Map<Integer, Map<Integer, Integer>> LCATable;
   Map<Node, Map<Integer, Pair<Node, Integer>>> MATable;
 
-  protected SuffixTree() {
+  protected SuffixTree() { }
+  
+  public SuffixTree(Node root) {
+    this.root = root;
   }
-
+  
   private SuffixTree(Builder builder) {
     root = builder.root;
     fixIncomingEdges();
@@ -46,6 +50,25 @@ public class SuffixTree {
    * Checks that following an edge matches all the characters along the edge. If
    * allowWildcards is set, then all characters except
    * AlphabetCharacter.END_CHAR are matched to AlphabetCharacter.WILDCARD.
+=======
+  
+  public List<TextSubstring> getAllSuffixes() {
+    return root.getAllSuffixes();
+  }
+  
+  public List<TextSubstring> getAllSuffixes() {
+    return root.getAllSuffixes();
+  }
+  
+  public List<TextSubstring> getAllSuffixes() {
+    return root.getAllSuffixes();
+  }
+  
+  /* 
+   * Checks that following an edge matches all the characters along the edge. If allowWildcards
+   * is set, then all characters except AlphabetCharacter.END_CHAR are matched to
+   * AlphabetCharacter.WILDCARD.
+>>>>>>> Stashed changes
    */
   private boolean checkMatch(Text p, int start, Edge e, boolean allowWildcards) {
     if (e != null) {
@@ -290,7 +313,7 @@ public class SuffixTree {
   }
 
   public static class Builder {
-    private Node root;
+    protected Node root;
     private ActivePoint activePoint;
     private int insertsAtStep;
     private Node lastInsertedNode;
@@ -459,6 +482,7 @@ public class SuffixTree {
     protected SuffixTree build() {
       processPrefixes();
       root.sortEdgesAndPutNodesAtLeaves(0);
+      root.removeEndCharEdge();
       return new SuffixTree(this);
     }
 

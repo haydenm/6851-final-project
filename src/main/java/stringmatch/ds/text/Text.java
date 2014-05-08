@@ -11,6 +11,12 @@ public class Text {
     this.text = builder.text;
   }
   
+  public Text(AlphabetCharacter ac) {
+    Builder builder = new Builder();
+    builder.addAlphabetCharacter(ac);
+    this.text = builder.text;
+  }
+  
   public Text(String s, boolean endChar) {
 	  Builder builder = new Builder();
 	  for (char c : s.toCharArray()) {
