@@ -1,6 +1,6 @@
 package stringmatch.ds.text;
 
-public class AlphabetCharacter {
+public class AlphabetCharacter implements Comparable<AlphabetCharacter> {
 
   public static final AlphabetCharacter END_CHAR
     = new AlphabetCharacter(new Character('$'));
@@ -34,6 +34,11 @@ public class AlphabetCharacter {
   
   public String toString() {
     return character.toString();
+  }
+
+  @Override
+  public int compareTo(AlphabetCharacter o) {
+    return character.compareTo(o.character);
   }
   
 }

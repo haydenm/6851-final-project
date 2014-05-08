@@ -1,6 +1,6 @@
 package stringmatch.ds.text;
 
-public class TextSubstring {
+public class TextSubstring implements Comparable<TextSubstring> {
 
   public Text text;
   public int start;
@@ -13,6 +13,10 @@ public class TextSubstring {
     this.text = text;
     this.start = start;
     this.length = length;
+  }
+  
+  public Text getText() {
+    return text;
   }
   
   public String toString() {
@@ -48,10 +52,6 @@ public class TextSubstring {
     return length;
   }
   
-  public Text getText() {
-		return text;
-  }
-  
   // Returns a concatenation of two TextSubstrings.
   // Because we work with a compressed trie, they don't necessarily need
   // to be adjacent! (the strings themselves are, but not necessarily the indices)
@@ -78,5 +78,20 @@ public class TextSubstring {
     return (start + 31*length);
   }
 
+  @Override
+  public int compareTo(TextSubstring o) {
+    int minLength = length < o.length ? length : o.length; 
+    for (int i = 0; i < minLength; i++) {
+      int c = getIthChar(i).compareTo(o.getIthChar(i));
+      if (c != 0)
+        return c;
+    }
+    if (length < o.length)
+      return -1;
+    else if (length > o.length)
+      return +1;
+    else
+      return 0;
+  }
   
 }

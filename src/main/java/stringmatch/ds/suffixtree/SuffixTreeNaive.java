@@ -40,7 +40,7 @@ public class SuffixTreeNaive extends SuffixTree {
 					  								e1.getTextSubstring().getStartIndex(),
 					  								lengthOfSimilarity);
 			  Edge newEdge = new Edge(n, e1.getTextStart(), sub, e1.wildcard);
-			  Node newNode = new Node();
+			  Node newNode = new Node(null);
 			  
 			  // If the similarity was the entire edge, add all the children to the new node
 			  if (lengthOfSimilarity == e1.getTextSubstring().getLength()) {
@@ -51,7 +51,7 @@ public class SuffixTreeNaive extends SuffixTree {
 				  										   e1.getTextSubstring().getStartIndex() + lengthOfSimilarity,
 				  										   e1.getTextSubstring().getLength() - lengthOfSimilarity);
 				  Edge newChildEdge = new Edge(newNode, e1.getTextStart(), newSub, false);
-				  Node newChild = new Node();
+				  Node newChild = new Node(null);
 				  newChild.outgoingEdges.addAll(e1.getToNode().outgoingEdges);
 				  newNode.outgoingEdges.add(newChildEdge);
 				  newChildEdge.setToNode(newChild);
@@ -64,7 +64,7 @@ public class SuffixTreeNaive extends SuffixTree {
 				  										   e.getTextSubstring().getStartIndex() + lengthOfSimilarity,
 				  										   e.getTextSubstring().getLength() - lengthOfSimilarity);
 				  Edge newChildEdge = new Edge(newNode, e.getTextStart(), newSub, false);
-				  Node newChild = new Node();
+				  Node newChild = new Node(null);
 				  newChild.outgoingEdges.addAll(e.getToNode().outgoingEdges);
 				  newNode.outgoingEdges.add(newChildEdge);
 				  newChildEdge.setToNode(newChild);
