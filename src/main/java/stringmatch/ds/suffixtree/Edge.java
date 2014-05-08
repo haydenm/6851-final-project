@@ -69,6 +69,14 @@ public class Edge implements Comparable<Edge> {
     return toNode;
   }
   
+  protected Node getFromNode() {
+    return fromNode;
+  }
+  
+  protected int getLength() {
+    return textSubstring.length;
+  }
+  
   public AlphabetCharacter getCharAt(int i) {
 	  if (wildcard && i == 0) {
 		  return AlphabetCharacter.WILDCARD;

@@ -21,6 +21,7 @@ public class Node {
   protected Edge centroidEdge;
   protected boolean isLeaf;
   protected int leafIndex;
+  protected int LCAIndex;
   
   protected Node(Edge incomingEdge) {
     this.incomingEdge = incomingEdge;
@@ -30,12 +31,14 @@ public class Node {
     centroidEdge = null;
     isLeaf = false;
     leafIndex = -1;
+    LCAIndex = -1;
   }
   
   protected Node(Edge incomingEdge, boolean isLeaf, int leafIndex) {
     this(incomingEdge);
     this.isLeaf = isLeaf;
     this.leafIndex = leafIndex;
+    LCAIndex = -1;
   }
   
   /*protected Edge follow(Text p, int start) {
@@ -72,6 +75,18 @@ public class Node {
 	  return null;
   }
   
+  protected boolean isLeaf() {
+    return outgoingEdges == null || outgoingEdges.size() == 0;
+  }
+  
+  protected int numChildren() {
+    return outgoingEdges.size();
+  }
+  
+  protected Node getChild(int i) {
+    return outgoingEdges.get(i).getToNode();
+  }
+  
   protected Node clone() {
 	  Node n = new Node(null);
 	  List<Edge> out = new ArrayList<Edge>();
@@ -88,11 +103,11 @@ public class Node {
   }
   
   public String toString() {
-	  if (isLeaf) {
-		  return "LEAF";
-	  } else {
-		  return outgoingEdges.toString();
-	  }
+    if (incomingEdge != null) {
+      return incomingEdge.toString();
+    } else {
+      return "ROOT";
+    }
   }
   
   protected List<Edge> getOutgoingEdges() {
