@@ -59,6 +59,7 @@ public class ActivePoint {
   protected void updateToMiddleOfOutgoingEdge(Edge edge) {
     activeEdge = edge;
     activeLength++;
+    moveToActiveEdgeEndpointIfNeeded();
   }
   
   protected void moveToActiveEdgeEndpointIfNeeded() {

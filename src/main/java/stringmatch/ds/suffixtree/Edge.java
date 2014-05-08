@@ -53,6 +53,10 @@ public class Edge implements Comparable<Edge> {
     // it shouldn't be! if it is, this call should be overriden in WildcardEdge
   }
   
+  protected boolean textEndsAtTreeEnd() {
+    return textEndsAtTreeEnd;
+  }
+  
   protected void setTextSubstring(TextSubstring textSubstring) {
     this.textSubstring = textSubstring;
     textStart = textSubstring.getStartIndex();
