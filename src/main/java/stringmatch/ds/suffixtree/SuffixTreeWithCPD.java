@@ -1,5 +1,6 @@
 package stringmatch.ds.suffixtree;
 
+import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
 
 /*
@@ -38,13 +39,60 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       }
     }
     
-    public SuffixTreeWithWildcards build() {      
+    protected static void addWildcardSubtreesAt(Node node) {   
+      if (node.isLeaf)
+        return;
+      
+      // Make the wildcard subtree to be attached to node, without the
+      // centroid edge.
+      Node nodeClone = node.clone(true, null);
+      if (nodeClone.outgoingEdges.size() > 0) {
+        // There's a special case where nodeClone may have no outgoing edges.
+        // The reason is that node could be the root of a wildcard subtree and
+        // node has only one outgoing edge. This edge is labeled the centroid
+        // edge and then its children are not included in nodeClone.
+        // We should only turn nodeClone into a wildcard subtree and attach it to
+        // node if it has children. If nodeClone doesn't have children, then
+        // node won't have a wildcard subtree -- but this is ok because we
+        // will simply follow the centroid edge.
+        
+        if (!(nodeClone.outgoingEdges.size() == 1 &&
+            nodeClone.outgoingEdges.get(0).getTextSubstring().getFirstChar().
+            equals(AlphabetCharacter.END_CHAR))) {
+          // There's another special case in which nodeClone has just one outgoing edge,
+          // which is '$'. We don't want to turn this edge into a wildcard because
+          // otherwise wildcards could match for '$', which isn't really in the
+          // input text.
+          
+          nodeClone = turnIntoWildcardSubtreeAt(nodeClone);
+      
+          // Attach nodeClone onto node. nodeClone should have just one outgoing
+          // edge: the wildcard edge.
+          Edge wildcardEdge = nodeClone.outgoingEdges.get(0);
+          wildcardEdge.fromNode = node;
+          node.addOutgoingEdge(wildcardEdge);
+        
+          // Find the centroid path decomposition of the copied tree (i.e., the
+          // wildcard subtree), which is rooted at wildcardEdge.getToNode().
+          findCentroidPaths(wildcardEdge.getToNode());
+        }
+      }
+      
+      // Recursively add wildcard subtrees.
+      for (Edge edge : node.outgoingEdges) {
+        // Recursively add them to the new wildcard subtree as well.
+        addWildcardSubtreesAt(edge.getToNode());
+      }
+    }
+    
+    public SuffixTreeWithCPD build() {
+      // Find the centroid paths in the original suffix tree (i.e., the one
+      // rooted at root). Then when we make copies we find the centroid
+      // paths *once* in each of those.
       findCentroidPaths(root);
       
       // Add wildcards (without including centroid edges).
-      // ....
-      
-      // remember to find centroid paths again on copy after condensing!
+      addWildcardSubtreesAt(root);
       
       return new SuffixTreeWithCPD(this);
     }

@@ -28,6 +28,10 @@ public class Text {
 	  this.text = builder.text;
   }
   
+  public List<AlphabetCharacter> getList() {
+    return text;
+  }
+  
   public int getLength() {
     return text.size();
   }

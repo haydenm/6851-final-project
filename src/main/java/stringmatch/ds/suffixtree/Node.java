@@ -182,26 +182,29 @@ public class Node {
     return edgeTexts;
   }
   
-  protected List<TextSubstring> getAllSuffixes() {
+  protected List<List<AlphabetCharacter>> getAllSuffixes() {
     return getAllSuffixes(false);
   }
   
-  protected List<TextSubstring> getAllSuffixes(boolean ignoreCentroidEdge) {
+  protected List<List<AlphabetCharacter>> getAllSuffixes(boolean ignoreCentroidEdge) {
     if (ignoreCentroidEdge && centroidEdge == null)
       throw new IllegalArgumentException();
     
-    List<TextSubstring> suffixes = new ArrayList<TextSubstring>();
+    List<List<AlphabetCharacter>> suffixes = new ArrayList<List<AlphabetCharacter>>();
     for (Edge outgoingEdge : outgoingEdges) {
       if (ignoreCentroidEdge && outgoingEdge == centroidEdge)
         continue;
       
       if (outgoingEdge.getToNode().isLeaf) {
-        suffixes.add(outgoingEdge.getTextSubstring());
+        suffixes.add(outgoingEdge.getTextSubstring().getSubstringAsText().getList());
       } else {
-        List<TextSubstring> suffixesAtChild = outgoingEdge.getToNode()
+        List<List<AlphabetCharacter>> suffixesAtChild = outgoingEdge.getToNode()
             .getAllSuffixes(false);
-        for (TextSubstring childSuffix : suffixesAtChild) {
-          suffixes.add(outgoingEdge.getTextSubstring().mergeWith(childSuffix));
+        for (List<AlphabetCharacter> childSuffix : suffixesAtChild) {
+          List<AlphabetCharacter> outgoingEdgeSubstring = new ArrayList<AlphabetCharacter>(
+              outgoingEdge.getTextSubstring().getSubstringAsText().getList());
+          outgoingEdgeSubstring.addAll(childSuffix);
+          suffixes.add(outgoingEdgeSubstring);
         }
       }
     }
@@ -344,6 +347,7 @@ public class Node {
     copy.numLeaves = numLeaves;
     if (removeCentroidEdge && centroidEdge != null)
       copy.numLeaves -= centroidEdge.getToNode().numLeaves;
+
     
     for (Edge outgoingEdge : outgoingEdges) {
       Edge edgeCopy = outgoingEdge.clone(copy);

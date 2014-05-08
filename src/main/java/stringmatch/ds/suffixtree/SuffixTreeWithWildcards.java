@@ -64,7 +64,7 @@ public class SuffixTreeWithWildcards extends SuffixTree {
         node.outgoingEdges.clear();
         return newRoot;
       }
-      
+            
       // Steps (2) and (3)
       List<Edge> edgesToDelete = new ArrayList<Edge>();
       Iterator<Edge> outgoingEdgeIterator = node.getOutgoingEdges().iterator();

@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.junit.Test;
 
@@ -30,10 +31,7 @@ public class SuffixTreeTest {
     assertEquals("[A, BANANA$, NA, $, NA, $, NA$, $, NA$]",
         st.getRoot().getEdgeStringsInBFS().toString());
     
-    List<String> allSuffixesAsStrings = new ArrayList<String>();
-    for (TextSubstring x : st.getRoot().getAllSuffixes()) {
-      allSuffixesAsStrings.add(x.getSubstringAsText().toString());
-    }
+    List<String> allSuffixesAsStrings = st.getAllSuffixesAsStrings();
     String[] trueSuffixes = new String[] { "A$", "NA$", "ANA$",
         "NANA$", "ANANA$", "BANANA$" };
     assertEquals(trueSuffixes.length, allSuffixesAsStrings.size());
@@ -108,13 +106,6 @@ public class SuffixTreeTest {
 	  expected.add(node2);
 	  expected.add(node3);
 	  assertEquals(expected, st.naiveWildcardQuery(new Text("**", false)));
-  }
-  
-  @Test
-  public void testWildcardSubtree() {
-    SuffixTreeNaiveBigSpace.Builder suffixTreeBuilder = new SuffixTreeNaiveBigSpace.Builder(new Text("BANANA", true));
-    SuffixTreeNaiveBigSpace st = suffixTreeBuilder.build();
-    st.printTree();
   }
   
 }

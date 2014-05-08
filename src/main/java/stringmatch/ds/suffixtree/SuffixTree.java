@@ -46,8 +46,28 @@ public class SuffixTree {
     return root;
   }
 
-  public List<TextSubstring> getAllSuffixes() {
-    return root.getAllSuffixes();
+  public List<List<AlphabetCharacter>> getAllSuffixes() {
+    return getAllSuffixes(false);
+  }
+  
+  public List<List<AlphabetCharacter>> getAllSuffixes(boolean ignoreCentroid) {
+    return root.getAllSuffixes(ignoreCentroid);
+  }
+  
+  public List<String> getAllSuffixesAsStrings() {
+    return getAllSuffixesAsStrings(false);
+  }
+  
+  public List<String> getAllSuffixesAsStrings(boolean ignoreCentroid) {
+    List<String> allSuffixesAsStrings = new ArrayList<String>();
+    for (List<AlphabetCharacter> x : getAllSuffixes(ignoreCentroid)) {
+      String xStr = "";
+      for (AlphabetCharacter y : x) {
+        xStr += y.toString();
+      }
+      allSuffixesAsStrings.add(xStr);
+    }
+    return allSuffixesAsStrings;
   }
   
   /* 

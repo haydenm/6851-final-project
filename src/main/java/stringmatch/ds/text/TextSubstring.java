@@ -62,6 +62,7 @@ public class TextSubstring implements Comparable<TextSubstring> {
   // to be adjacent! (the strings themselves are, but not necessarily the indices)
   // In terms of strings, the string represented by this must be immediately
   // before the string represented by other.
+  // NOTE: Doesn't work when this or other is a wildcard!
   public TextSubstring mergeWith(TextSubstring other) {
     int mergedLength = length + other.length;
     int mergedStart = other.getStartIndex() - length;
