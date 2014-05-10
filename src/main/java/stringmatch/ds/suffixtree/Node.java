@@ -2,8 +2,10 @@ package stringmatch.ds.suffixtree;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 import stringmatch.ds.text.AlphabetCharacter;
@@ -15,8 +17,7 @@ public class Node {
 
   List<Edge> outgoingEdges;
   protected Edge incomingEdge;
-  protected Node suffixLink;
-  
+
   protected int numLeaves;
   
   protected Edge centroidEdge;
@@ -26,6 +27,10 @@ public class Node {
   protected int maxHeight;
   protected Edge longPathEdge;
   protected Pair<Integer, Path> ladder;
+  
+  /* Used for building! */
+  protected Node suffixLink;
+  /* Used for building! */
   
   protected Node(Edge incomingEdge) {
     this.incomingEdge = incomingEdge;
@@ -70,6 +75,17 @@ public class Node {
 	return null;
   }*/
   
+  protected void removeEndCharEdge() {
+    for (int i = 0; i < outgoingEdges.size(); i++) {
+      Edge outgoingEdge = outgoingEdges.get(i);
+      if (outgoingEdge.getTextSubstring().getLength() == 1 &&
+          outgoingEdge.getTextSubstring().getFirstChar().equals(AlphabetCharacter.END_CHAR)) {
+        outgoingEdges.remove(i);
+        break;
+      }
+    }
+  }
+  
   protected Edge follow(AlphabetCharacter c) {
 	  for (Edge e: outgoingEdges) {
 		  TextSubstring edgeSubstring = e.getTextSubstring();
@@ -93,27 +109,16 @@ public class Node {
     return outgoingEdges.get(i).getToNode();
   }
   
-  protected Node clone() {
-	  Node n = new Node(null);
-	  List<Edge> out = new ArrayList<Edge>();
-	  for (Edge e: outgoingEdges) {
-		  TextSubstring sub = new TextSubstring(e.getTextSubstring().getText(),
-				  								e.getTextSubstring().getStartIndex(),
-				  								e.getTextSubstring().getLength());
-		  Edge copy = new Edge(n, e.getTextStart(), sub, e.wildcard);
-		  copy.setToNode(e.getToNode().clone());
-		  out.add(copy);
-	  }
-	  n.outgoingEdges = out;
-	  return n;
-  }
-  
   public String toString() {
     if (incomingEdge != null) {
       return incomingEdge.toString();
     } else {
       return "ROOT";
     }
+  }
+  
+  protected void setIncomingEdge(Edge edge) {
+    incomingEdge = edge;
   }
   
   protected List<Edge> getOutgoingEdges() {
@@ -145,7 +150,12 @@ public class Node {
   protected void sortEdgesAndPutNodesAtLeaves(int height) {
     Collections.sort(outgoingEdges);
     for (Edge outgoingEdge : outgoingEdges) {
+      outgoingEdge.fixTextSubstringAfterBuild();
       int outgoingEdgeHeight = outgoingEdge.getTextSubstring().getLength();
+      
+      if (outgoingEdge.getToNode() != null && outgoingEdge.getToNode().incomingEdge != outgoingEdge)
+        throw new RuntimeException("Mismatched incomingEdge");
+      
       if (outgoingEdge.getToNode() != null) {
         outgoingEdge.getToNode().sortEdgesAndPutNodesAtLeaves(height + outgoingEdgeHeight);
       } else {
@@ -182,19 +192,186 @@ public class Node {
     return edgeTexts;
   }
   
-  protected List<TextSubstring> getAllSuffixes() {
-    List<TextSubstring> suffixes = new ArrayList<TextSubstring>();
+  protected List<List<AlphabetCharacter>> getAllSuffixes() {
+    return getAllSuffixes(false);
+  }
+  
+  protected List<List<AlphabetCharacter>> getAllSuffixes(boolean ignoreCentroidEdge) {
+    if (ignoreCentroidEdge && centroidEdge == null)
+      throw new IllegalArgumentException();
+    
+    List<List<AlphabetCharacter>> suffixes = new ArrayList<List<AlphabetCharacter>>();
     for (Edge outgoingEdge : outgoingEdges) {
+      if (ignoreCentroidEdge && outgoingEdge == centroidEdge)
+        continue;
+      
       if (outgoingEdge.getToNode().isLeaf) {
-        suffixes.add(outgoingEdge.getTextSubstring());
+        suffixes.add(outgoingEdge.getTextSubstring().getSubstringAsText().getList());
       } else {
-        List<TextSubstring> suffixesAtChild = outgoingEdge.getToNode().getAllSuffixes();
-        for (TextSubstring childSuffix : suffixesAtChild) {
-          suffixes.add(outgoingEdge.getTextSubstring().mergeWith(childSuffix));
+        List<List<AlphabetCharacter>> suffixesAtChild = outgoingEdge.getToNode()
+            .getAllSuffixes(false);
+        for (List<AlphabetCharacter> childSuffix : suffixesAtChild) {
+          List<AlphabetCharacter> outgoingEdgeSubstring = new ArrayList<AlphabetCharacter>(
+              outgoingEdge.getTextSubstring().getSubstringAsText().getList());
+          outgoingEdgeSubstring.addAll(childSuffix);
+          suffixes.add(outgoingEdgeSubstring);
         }
       }
     }
     return suffixes;
+  }
+  
+  /*
+   * Condenses the outgoing edges by merging ones that share characters.
+   */
+  protected void condense() {
+    Map<AlphabetCharacter, Edge> outgoingEdgesByFirstChar
+      = new HashMap<AlphabetCharacter, Edge>();
+    for (Edge edge : outgoingEdges) {
+      if (outgoingEdgesByFirstChar.containsKey(edge.getTextSubstring().getFirstChar())) {
+        // We already found an edge that starts with the same char, so let's merge them.
+        Edge matchingEdge = outgoingEdgesByFirstChar.get(edge.getTextSubstring().getFirstChar());
+        int commonPrefixLength = edge.getTextSubstring().
+            commonPrefixLength(matchingEdge.getTextSubstring());
+        TextSubstring mergedTextSubstring = new TextSubstring(
+            edge.getTextSubstring().getText(),
+            edge.getTextSubstring().getStartIndex(), commonPrefixLength);
+        Edge mergedEdge = new Edge(this, mergedTextSubstring);
+        Node mergedNode = new Node(mergedEdge);
+        mergedEdge.setToNode(mergedNode);
+        // Note: mergedNode cannot be a leaf because it cannot be the case that both of
+        // the two edges being merged are attached directly to leaf nodes (otherwise
+        // those two leaf nodes would represent exactly the same suffix).
+        
+        // Process the children attached to edge.
+        if (commonPrefixLength == edge.getTextSubstring().getLength()) {
+          // The common prefix is the entire edge, so add all of its children to the new node.
+          // Note: edge cannot be pointing directly to a leaf node (i.e., it must have children)
+          // because otherwise there would be another edge that shares a '$' in common with
+          // this one.
+          for (Edge childEdge : edge.getToNode().getOutgoingEdges()) {
+            childEdge.fromNode = mergedNode;
+            mergedNode.outgoingEdges.add(childEdge);
+          }
+        } else {
+          // mergedNode must have as an outgoing edge a new edge that represents what is
+          // left of edge (i.e., what is not in mergedEdge).
+          TextSubstring newChildEdgeTextSubstring = new TextSubstring(
+              edge.getTextSubstring().getText(),
+              edge.getTextSubstring().getStartIndex() + commonPrefixLength,
+              edge.getTextSubstring().getLength() - commonPrefixLength);
+          Edge newChildEdge = new Edge(mergedNode, newChildEdgeTextSubstring);
+          Node newChildNode = new Node(newChildEdge);
+          newChildNode.outgoingEdges.addAll(edge.getToNode().outgoingEdges);
+          if (newChildNode.outgoingEdges.size() == 0) {
+            newChildNode.isLeaf = true;
+            newChildNode.leafIndex = edge.getToNode().leafIndex;
+          }
+          mergedNode.addOutgoingEdge(newChildEdge);
+          newChildEdge.setToNode(newChildNode);
+        }
+        
+        // Process the children attached to matchingEdge.
+        if (commonPrefixLength == matchingEdge.getTextSubstring().getLength()) {
+          // The common prefix is the entire edge, so add all of its children to the new node.
+          // Note: matchingEdge cannot be pointing directly to a leaf node (i.e., it must have children)
+          // because otherwise there would be another edge that shares a '$' in common with
+          // this one.
+          for (Edge childEdge : matchingEdge.getToNode().getOutgoingEdges()) {
+            childEdge.fromNode = mergedNode;
+            mergedNode.outgoingEdges.add(childEdge);
+          }
+        } else {
+          // mergedNode must have as an outgoing edge a new edge that represents what is
+          // left of matchingEdge (i.e., what is not in mergedEdge).
+          TextSubstring newChildEdgeTextSubstring = new TextSubstring(
+              matchingEdge.getTextSubstring().getText(),
+              matchingEdge.getTextSubstring().getStartIndex() + commonPrefixLength,
+              matchingEdge.getTextSubstring().getLength() - commonPrefixLength);
+          Edge newChildEdge = new Edge(mergedNode, newChildEdgeTextSubstring);
+          Node newChildNode = new Node(newChildEdge);
+          newChildNode.outgoingEdges.addAll(matchingEdge.getToNode().outgoingEdges);
+          if (newChildNode.outgoingEdges.size() == 0) {
+            newChildNode.isLeaf = true;
+            newChildNode.leafIndex = matchingEdge.getToNode().leafIndex;
+          }
+          mergedNode.addOutgoingEdge(newChildEdge);
+          newChildEdge.setToNode(newChildNode);
+        }
+        
+        // Update the map of first characters to store the mergedEdge.
+        outgoingEdgesByFirstChar.put(mergedEdge.getTextSubstring().getFirstChar(),
+            mergedEdge);
+      } else {
+        // If this edge does not share a first char with an edge seen so far, put it
+        // in the map.
+        outgoingEdgesByFirstChar.put(edge.getTextSubstring().getFirstChar(), edge);
+      }
+    }
+    
+    // Update this node's outgoing edges.
+    outgoingEdges.clear();
+    outgoingEdges.addAll(outgoingEdgesByFirstChar.values());
+    Collections.sort(outgoingEdges);
+    
+    // Recursively condense the children.
+    for (Edge edge : outgoingEdges) {
+      edge.getToNode().condense();
+    }
+  }
+  
+  protected Node getShallowCopyWithoutCentroidEdge() {
+    if (centroidEdge == null)
+      throw new IllegalArgumentException();
+    
+    Node copy = new Node(incomingEdge, isLeaf, leafIndex);
+    copy.numLeaves = numLeaves - centroidEdge.getToNode().numLeaves;
+    
+    List<Edge> outgoingEdgesCopy = new ArrayList<Edge>(outgoingEdges.size() - 1);
+    Edge newCentroidEdge = null;
+    int maxNumLeaves = 0;
+    for (Edge outgoingEdge : outgoingEdges) {
+      if (outgoingEdge != centroidEdge) {
+        outgoingEdgesCopy.add(outgoingEdge);
+        if (outgoingEdge.getToNode().numLeaves >= maxNumLeaves) {
+          maxNumLeaves = outgoingEdge.getToNode().numLeaves;
+          newCentroidEdge = outgoingEdge;
+        }
+      }
+    }
+    copy.centroidEdge = newCentroidEdge;
+    
+    return copy;
+  }
+  
+  protected Node clone() {
+    return clone(false, null);
+  }
+  
+  /*
+   * Makes a deep clone of the tree rooted at this.
+   */
+  protected Node clone(boolean removeCentroidEdge, Edge incomingEdge) {
+    Node copy = new Node(incomingEdge, isLeaf, leafIndex);
+    
+    copy.numLeaves = numLeaves;
+    if (removeCentroidEdge && centroidEdge != null)
+      copy.numLeaves -= centroidEdge.getToNode().numLeaves;
+
+    
+    for (Edge outgoingEdge : outgoingEdges) {
+      Edge edgeCopy = outgoingEdge.clone(copy);
+      if (centroidEdge == outgoingEdge) {
+        if (!removeCentroidEdge) {
+          copy.outgoingEdges.add(edgeCopy);
+          copy.centroidEdge = edgeCopy;
+        }
+      } else {
+        copy.outgoingEdges.add(edgeCopy);
+      }
+    }
+    
+    return copy;
   }
   
 }

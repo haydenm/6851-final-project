@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.junit.Test;
 
@@ -25,16 +26,13 @@ public class SuffixTreeTest {
     
     SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(inputText);
     SuffixTree st = suffixTreeBuilder.build();
-    assertEquals("[$, A, $, NA, $, NA$, BANANA$, NA, $, NA$]", 
+    assertEquals("[A, $, NA, $, NA$, BANANA$, NA, $, NA$]", 
         st.getRoot().getEdgeStringsInDFS().toString());
-    assertEquals("[$, A, BANANA$, NA, $, NA, $, NA$, $, NA$]",
+    assertEquals("[A, BANANA$, NA, $, NA, $, NA$, $, NA$]",
         st.getRoot().getEdgeStringsInBFS().toString());
     
-    List<String> allSuffixesAsStrings = new ArrayList<String>();
-    for (TextSubstring x : st.getRoot().getAllSuffixes()) {
-      allSuffixesAsStrings.add(x.getSubstringAsText().toString());
-    }
-    String[] trueSuffixes = new String[] { "$", "A$", "NA$", "ANA$",
+    List<String> allSuffixesAsStrings = st.getAllSuffixesAsStrings();
+    String[] trueSuffixes = new String[] { "A$", "NA$", "ANA$",
         "NANA$", "ANANA$", "BANANA$" };
     assertEquals(trueSuffixes.length, allSuffixesAsStrings.size());
     for (String x : trueSuffixes) {

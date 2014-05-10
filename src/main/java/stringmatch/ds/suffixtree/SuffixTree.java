@@ -23,16 +23,19 @@ import stringmatch.ds.suffixtree.Node;
 public class SuffixTree {
 
   protected Node root;
+  
   private List<Pair<Integer, Node>> LCAOrder;
   Map<Integer, Map<Integer, Integer>> LCATable;
   Map<Node, Map<Integer, Pair<Node, Integer>>> MATable;
 
-  protected SuffixTree() {
+  protected SuffixTree() { }
+  
+  public SuffixTree(Node root) {
+    this.root = root;
   }
-
+  
   private SuffixTree(Builder builder) {
     root = builder.root;
-    fixIncomingEdges();
     LCAOrder = eulerTour();
     LCATable = buildLCATable();
     MATable = buildMATable();
@@ -42,10 +45,34 @@ public class SuffixTree {
     return root;
   }
 
-  /*
-   * Checks that following an edge matches all the characters along the edge. If
-   * allowWildcards is set, then all characters except
-   * AlphabetCharacter.END_CHAR are matched to AlphabetCharacter.WILDCARD.
+  public List<List<AlphabetCharacter>> getAllSuffixes() {
+    return getAllSuffixes(false);
+  }
+  
+  public List<List<AlphabetCharacter>> getAllSuffixes(boolean ignoreCentroid) {
+    return root.getAllSuffixes(ignoreCentroid);
+  }
+  
+  public List<String> getAllSuffixesAsStrings() {
+    return getAllSuffixesAsStrings(false);
+  }
+  
+  public List<String> getAllSuffixesAsStrings(boolean ignoreCentroid) {
+    List<String> allSuffixesAsStrings = new ArrayList<String>();
+    for (List<AlphabetCharacter> x : getAllSuffixes(ignoreCentroid)) {
+      String xStr = "";
+      for (AlphabetCharacter y : x) {
+        xStr += y.toString();
+      }
+      allSuffixesAsStrings.add(xStr);
+    }
+    return allSuffixesAsStrings;
+  }
+  
+  /* 
+   * Checks that following an edge matches all the characters along the edge. If allowWildcards
+   * is set, then all characters except AlphabetCharacter.END_CHAR are matched to
+   * AlphabetCharacter.WILDCARD.
    */
   private boolean checkMatch(Text p, int start, Edge e, boolean allowWildcards) {
     if (e != null) {
@@ -333,18 +360,6 @@ public class SuffixTree {
     System.out.println(path);
   }
 
-  public void fixIncomingEdges() {
-    recFixIncomingEdges(root);
-  }
-
-  public void recFixIncomingEdges(Node node) {
-    for (Edge e : node.outgoingEdges) {
-      Node n = e.getToNode();
-      n.incomingEdge = e;
-      recFixIncomingEdges(n);
-    }
-  }
-
   public static void main(String[] args) {
     SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(new Text(
         "BANANA", true));
@@ -365,11 +380,12 @@ public class SuffixTree {
   }
 
   public static class Builder {
-    private Node root;
+    protected Node root;
     private ActivePoint activePoint;
     private int insertsAtStep;
     private Node lastInsertedNode;
     private int prefixStart;
+    int prefixEnd;
     private int endPosition;
 
     private Text inputText;
@@ -380,6 +396,7 @@ public class SuffixTree {
       insertsAtStep = 0;
       lastInsertedNode = null;
       prefixStart = 0;
+      prefixEnd = 0;
       endPosition = 1;
 
       this.inputText = inputText;
@@ -394,12 +411,13 @@ public class SuffixTree {
     }
 
     private void processPrefixes() {
-      for (int endIndex = 1; endIndex <= inputText.getLength(); endIndex++) {
-        int length = endIndex - prefixStart;
+      for (int i = 0; i < inputText.getLength(); i++) {
+        prefixEnd++;
+        int length = prefixEnd - prefixStart;
         TextSubstring prefix = new TextSubstring(inputText, prefixStart, length);
         insertsAtStep = 0;
         addSubstring(prefix);
-        if (endIndex < inputText.getLength())
+        if (prefixEnd < inputText.getLength())
           endPosition++;
       }
     }
@@ -436,9 +454,11 @@ public class SuffixTree {
         // Add a new edge.
         Edge edge = new Edge(activeNode, substr.getEndIndex() - 1, this);
         activeNode.addOutgoingEdge(edge);
+        if (prefixStart == prefixEnd)
+          prefixEnd++;
         prefixStart++;
         TextSubstring newSubstr = new TextSubstring(inputText, prefixStart,
-            substr.getEndIndex() - prefixStart);
+            prefixEnd - prefixStart);
         resetWithSuffixLinks(newSubstr);
         if (insertsAtStep > 0 && activePoint.getActiveNode() != root) {
           lastInsertedNode.setSuffixLink(activePoint.getActiveNode());
@@ -506,25 +526,32 @@ public class SuffixTree {
         int oldEdgeTextStartIndex = activePoint.getActiveEdge()
             .getTextSubstring().getStartIndex()
             + activePoint.getActiveLength();
-        Edge oldEdge = new Edge(newNode, new TextSubstring(inputText,
-            oldEdgeTextStartIndex, activePoint.getActiveEdge()
-                .getTextSubstring().getEndIndex()
-                - oldEdgeTextStartIndex));
+        Edge oldEdge = new Edge(newNode, oldEdgeTextStartIndex, this);
+        if (!activePoint.getActiveEdge().textEndsAtTreeEnd()) {
+          oldEdge.setTextSubstring(new TextSubstring(inputText, oldEdgeTextStartIndex,
+              activePoint.getActiveEdge().getTextSubstring().getEndIndex() -
+              oldEdgeTextStartIndex));
+        }
         oldEdge.setToNode(activePoint.getActiveEdge().getToNode());
+        if (activePoint.getActiveEdge() != null && activePoint.getActiveEdge().getToNode() != null)
+          activePoint.getActiveEdge().getToNode().setIncomingEdge(oldEdge);
         newNode.addOutgoingEdge(oldEdge);
         activePoint.getActiveEdge().setToNode(newNode);
         activePoint.getActiveEdge().setTextSubstring(
             new TextSubstring(inputText, activePoint.getActiveEdge()
                 .getTextSubstring().getStartIndex(), activePoint
                 .getActiveLength()));
+
         if (insertsAtStep > 0)
           lastInsertedNode.setSuffixLink(newNode);
         lastInsertedNode = newNode;
         insertsAtStep++;
 
+        if (prefixStart == prefixEnd)
+          prefixEnd++;
         prefixStart++;
         TextSubstring newSubstr = new TextSubstring(inputText, prefixStart,
-            substr.getEndIndex() - prefixStart);
+            prefixEnd - prefixStart);
         resetWithSuffixLinks(newSubstr);
         if (newSubstr.getStartIndex() < newSubstr.getEndIndex())
           addSubstring(newSubstr);
@@ -534,6 +561,7 @@ public class SuffixTree {
     protected SuffixTree build() {
       processPrefixes();
       root.sortEdgesAndPutNodesAtLeaves(0);
+      root.removeEndCharEdge();
       return new SuffixTree(this);
     }
 

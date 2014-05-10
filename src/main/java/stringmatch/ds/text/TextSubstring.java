@@ -2,6 +2,11 @@ package stringmatch.ds.text;
 
 public class TextSubstring implements Comparable<TextSubstring> {
 
+  public static final TextSubstring END_CHAR = new TextSubstring(
+      new Text(AlphabetCharacter.END_CHAR), 0, 1);
+  public static final TextSubstring WILDCARD = new TextSubstring(
+      new Text(AlphabetCharacter.WILDCARD), 0, 1);
+  
   public Text text;
   public int start;
   public int length;
@@ -57,10 +62,16 @@ public class TextSubstring implements Comparable<TextSubstring> {
   // to be adjacent! (the strings themselves are, but not necessarily the indices)
   // In terms of strings, the string represented by this must be immediately
   // before the string represented by other.
+  // NOTE: Doesn't work when this or other is a wildcard!
   public TextSubstring mergeWith(TextSubstring other) {
     int mergedLength = length + other.length;
     int mergedStart = other.getStartIndex() - length;
     return new TextSubstring(text, mergedStart, mergedLength);
+  }
+  
+  public void deleteFirstChar() {
+    start += 1;
+    length -=1 ;
   }
   
   public boolean equals(Object obj) {
@@ -71,6 +82,22 @@ public class TextSubstring implements Comparable<TextSubstring> {
     } else {
       return false;
     }
+  }
+  
+  public TextSubstring clone() {
+    return new TextSubstring(text, start, length);
+  }
+  
+  public int commonPrefixLength(TextSubstring o) {
+    int prefixLength = 0;
+    int minLength = length < o.length ? length : o.length;
+    for (int i = 0; i < minLength; i++) {
+      if (getIthChar(i).equals(o.getIthChar(i)))
+        prefixLength++;
+      else
+        break;
+    }
+    return prefixLength;
   }
   
   public int hashCode() {

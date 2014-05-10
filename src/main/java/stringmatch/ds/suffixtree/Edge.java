@@ -5,14 +5,16 @@ import stringmatch.ds.text.TextSubstring;
 
 public class Edge implements Comparable<Edge> {
 
-  private Node fromNode;
-  private Node toNode;
+  protected Node fromNode;
+  protected Node toNode;
   
+  protected TextSubstring textSubstring;
+  
+  /* Used for building! */
   private int textStart;
   private boolean textEndsAtTreeEnd;
   private SuffixTree.Builder treeBuilder;
-  private TextSubstring textSubstring;
-  boolean wildcard;
+  /* Used for building! */
     
   protected Edge(Node fromNode, TextSubstring textSubstring) {
     this.fromNode = fromNode;
@@ -20,7 +22,6 @@ public class Edge implements Comparable<Edge> {
     textEndsAtTreeEnd = false;
     treeBuilder = null;
     this.textSubstring = textSubstring;
-    wildcard = false;
   }
   
   protected Edge(Node fromNode, int textStart,
@@ -31,23 +32,30 @@ public class Edge implements Comparable<Edge> {
     textEndsAtTreeEnd = true;
     this.treeBuilder = treeBuilder;
     textSubstring = null;
-    wildcard = false;
   }
   
-  protected Edge(Node fromNode, int textStart, TextSubstring textSubstring, boolean wildcard) {
+  // Why do we need this?
+  /*protected Edge(Node fromNode, int textStart, TextSubstring textSubstring) {
 	    this.fromNode = fromNode;
 	    toNode = null;
 	    this.textStart = textStart;
 	    textEndsAtTreeEnd = false;
 	    treeBuilder = null;
 	    this.textSubstring = textSubstring;
-	    this.wildcard = wildcard;
-  }
+  }*/
   
   protected void setToNode(Node node) {
     toNode = node;
   }
  
+  public boolean isWildcardEdge() {
+    return false;
+    // it shouldn't be! if it is, this call should be overriden in WildcardEdge
+  }
+  
+  protected boolean textEndsAtTreeEnd() {
+    return textEndsAtTreeEnd;
+  }
   
   protected void setTextSubstring(TextSubstring textSubstring) {
     this.textSubstring = textSubstring;
@@ -65,6 +73,13 @@ public class Edge implements Comparable<Edge> {
     return substr;
   }
   
+  public void fixTextSubstringAfterBuild() {
+    if (textEndsAtTreeEnd) {
+      textSubstring = getTextSubstring();
+      textEndsAtTreeEnd = false;
+    }
+  }
+  
   protected Node getToNode() {
     return toNode;
   }
@@ -78,25 +93,22 @@ public class Edge implements Comparable<Edge> {
   }
   
   public AlphabetCharacter getCharAt(int i) {
-	  if (wildcard && i == 0) {
-		  return AlphabetCharacter.WILDCARD;
-	  } else {
-		  return getTextSubstring().getIthChar(i);
-	  }
+		return getTextSubstring().getIthChar(i);
   }
   
   public String toString() {
-	  if (wildcard) {
-		  String original = getTextSubstring().getSubstringAsText().toString();
-		  return "*" + original.substring(1, original.length());
-	  }
 	  return getTextSubstring().getSubstringAsText().toString();
   }
 
-public int getTextStart() {
-	return textStart;
-}
-
+  public int getTextStart() {
+    return getTextSubstring().getStartIndex();
+  }
+  
+  public Edge clone(Node fromNode) {
+    Edge copy = new Edge(fromNode, textSubstring.clone());
+    copy.toNode = toNode.clone(false, copy);
+    return copy;
+  }
 
   @Override
   public int compareTo(Edge o) {
