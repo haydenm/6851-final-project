@@ -9,6 +9,7 @@ import java.util.Queue;
 import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
 import stringmatch.ds.text.TextSubstring;
+import stringmatch.ds.util.Pair;
 
 public class Node {
 
@@ -22,6 +23,9 @@ public class Node {
   protected boolean isLeaf;
   protected int leafIndex;
   protected int LCAIndex;
+  protected int maxHeight;
+  protected Edge longPathEdge;
+  protected Pair<Integer, Path> ladder;
   
   protected Node(Edge incomingEdge) {
     this.incomingEdge = incomingEdge;
@@ -32,6 +36,7 @@ public class Node {
     isLeaf = false;
     leafIndex = -1;
     LCAIndex = -1;
+    maxHeight = -1;
   }
   
   protected Node(Edge incomingEdge, boolean isLeaf, int leafIndex) {
@@ -39,6 +44,7 @@ public class Node {
     this.isLeaf = isLeaf;
     this.leafIndex = leafIndex;
     LCAIndex = -1;
+    maxHeight = -1;
   }
   
   /*protected Edge follow(Text p, int start) {
