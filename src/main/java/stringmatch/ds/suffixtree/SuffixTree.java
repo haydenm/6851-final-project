@@ -288,20 +288,95 @@ public class SuffixTree {
       return min2;
     }
   }
+  
+  public void computeHeights() {
+    computeHeightsHelper(root);
+  }
+  
+  public int computeHeightsHelper(Node node) {
+    if (node.isLeaf()) {
+      node.maxHeight = 0;
+    } else {
+      for (Edge e: node.outgoingEdges) {
+        Node child = e.getToNode();
+        int childHeight = computeHeightsHelper(child);
+        if (childHeight + e.getLength() > node.maxHeight) {
+          node.maxHeight = childHeight + e.getLength();
+          node.longPathEdge = e;
+        }
+      }
+    }
+    return node.maxHeight;
+  }
+  
+  public void buildLongPaths() {
+    buildLongPathsHelper(root);
+  }
+  
+  public void buildLongPathsHelper(Node node) {
+    Path path = new Path();
+    Node current = node;
+    while (current != null) {
+      int height = path.addNode(current);
+      current.ladder = new Pair<Integer, Path>(height, path);
+      Edge e = current.longPathEdge;
+      if (e != null) {
+        current = e.getToNode();
+      } else {
+        current = null;
+      }
+    }
+    for (Edge e: node.outgoingEdges) {
+      if (e!= node.longPathEdge) {
+        buildLongPathsHelper(e.getToNode());
+      }
+    }
+    System.out.println(path);
+  }
+  
+  public void extendLadders() {
+    System.out.println("--------");
+    extendLaddersHelper(root);
+  }
+  
+  public void extendLaddersHelper(Node node) {
+    Path path = node.ladder.getRight();
+    int nodeHeight = node.ladder.getLeft();
+    int height = node.ladder.getRight().getLength();
+    if (nodeHeight == height) {
+      Node current = node;
+      Edge e = node.incomingEdge;
+      while (e != null && path.getLength() < 2 * height) {
+        current = e.getFromNode();
+        path.prependNode(current);
+        e = current.incomingEdge;
+      }
+    }
+    for (Edge e: node.outgoingEdges) {
+      if (e!= node.longPathEdge) {
+        extendLaddersHelper(e.getToNode());
+      }
+    }
+    System.out.println(path);
+  }
 
   public static void main(String[] args) {
     SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(new Text(
         "BANANA", true));
     SuffixTree st = suffixTreeBuilder.build();
-    //st.printTree();
+    st.printTree();
     //System.out.println(st.eulerTour(0, st.root));
     AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
     AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
     AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
     AlphabetCharacter D = new AlphabetCharacter(new Character('$'));
     Node n1 = st.root.follow(N).getToNode().follow(D).getToNode();
-    Node n2 = st.root.follow(N).getToNode().follow(N).getToNode();
+    Node n2 = st.root.follow(A).getToNode().follow(N).getToNode();
     //System.out.println(st.LCA(n1, n2));
+    st.computeHeights();
+    //System.out.println(st.root.maxHeight);
+    st.buildLongPaths();
+    st.extendLadders();
   }
 
   public static class Builder {

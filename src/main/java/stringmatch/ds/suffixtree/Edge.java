@@ -89,7 +89,7 @@ public class Edge implements Comparable<Edge> {
   }
   
   protected int getLength() {
-    return textSubstring.length;
+    return getTextSubstring().getLength();
   }
   
   public AlphabetCharacter getCharAt(int i) {
