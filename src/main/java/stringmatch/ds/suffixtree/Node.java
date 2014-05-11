@@ -222,6 +222,29 @@ public class Node {
   }
   
   /*
+   * Returns a list of the leafIndex (i.e., the positions of the leaves in the
+   * input text) for all the leaves in the subtree rooted at this.
+   */
+  protected List<Integer> getIndicesOfLeaves() {
+    List<Integer> indices = new ArrayList<Integer>();
+    
+    if (isLeaf()) {
+      indices.add(leafIndex);
+      return indices;
+    }
+    
+    for (Edge e : outgoingEdges) {
+      if (!e.isWildcardEdge()) {
+        // There's no need to follow wildcard edges because wildcard subtrees
+        // are just copies of the tree we're in.
+        indices.addAll(e.getToNode().getIndicesOfLeaves());
+      }
+    }
+    
+    return indices;
+  }
+  
+  /*
    * Condenses the outgoing edges by merging ones that share characters.
    */
   protected void condense() {

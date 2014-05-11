@@ -68,13 +68,13 @@ public class SuffixTree {
     }
     return allSuffixesAsStrings;
   }
-  
+    
   /* 
    * Checks that following an edge matches all the characters along the edge. If allowWildcards
    * is set, then all characters except AlphabetCharacter.END_CHAR are matched to
    * AlphabetCharacter.WILDCARD.
    */
-  private boolean checkMatch(Text p, int start, Edge e, boolean allowWildcards) {
+  protected boolean checkMatch(Text p, int start, Edge e, boolean allowWildcards) {
     if (e != null) {
       for (int i = 0; i < Math.min(e.getTextSubstring().length, p.getLength()
           - start); i++) {
@@ -90,7 +90,7 @@ public class SuffixTree {
     }
     return false;
   }
-
+  
   /*
    * Returns the node corresponding to the longest common prefix of p with the
    * suffix tree, or null if there is no such prefix. No wildcards allowed.
