@@ -314,9 +314,15 @@ public class SuffixTree {
   }
   
   public void buildLongPathsHelper(Node node) {
+    //System.out.println(node);
     Path path = new Path();
     Node current = node;
     while (current != null) {
+      for (Edge e: current.outgoingEdges) {
+        if (e!= current.longPathEdge) {
+          buildLongPathsHelper(e.getToNode());
+        }
+      }
       int height = path.addNode(current);
       current.ladder = new Pair<Integer, Path>(height, path);
       Edge e = current.longPathEdge;
@@ -326,16 +332,9 @@ public class SuffixTree {
         current = null;
       }
     }
-    for (Edge e: node.outgoingEdges) {
-      if (e!= node.longPathEdge) {
-        buildLongPathsHelper(e.getToNode());
-      }
-    }
-    System.out.println(path);
   }
   
   public void extendLadders() {
-    System.out.println("--------");
     extendLaddersHelper(root);
   }
   
@@ -351,18 +350,16 @@ public class SuffixTree {
         path.prependNode(current);
         e = current.incomingEdge;
       }
+      System.out.println(path);
     }
     for (Edge e: node.outgoingEdges) {
-      if (e!= node.longPathEdge) {
         extendLaddersHelper(e.getToNode());
-      }
     }
-    System.out.println(path);
   }
 
   public static void main(String[] args) {
     SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(new Text(
-        "BANANA", true));
+        "BBAABBBB", true));
     SuffixTree st = suffixTreeBuilder.build();
     st.printTree();
     //System.out.println(st.eulerTour(0, st.root));
@@ -370,13 +367,14 @@ public class SuffixTree {
     AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
     AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
     AlphabetCharacter D = new AlphabetCharacter(new Character('$'));
-    Node n1 = st.root.follow(N).getToNode().follow(D).getToNode();
-    Node n2 = st.root.follow(A).getToNode().follow(N).getToNode();
+    //Node n1 = st.root.follow(N).getToNode().follow(D).getToNode();
+    //Node n2 = st.root.follow(A).getToNode().follow(N).getToNode();
     //System.out.println(st.LCA(n1, n2));
     st.computeHeights();
     //System.out.println(st.root.maxHeight);
     st.buildLongPaths();
     st.extendLadders();
+
   }
 
   public static class Builder {
