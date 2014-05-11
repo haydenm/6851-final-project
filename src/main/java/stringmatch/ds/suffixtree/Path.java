@@ -87,19 +87,7 @@ public class Path {
     if (nodes.containsKey(goal)) {
       return new Pair<Node, Integer>(nodes.get(goal), 0);
     } else {
-      //Integer succ = steps.successor(goal);
-      Integer succ = null;
-      for (Integer i: nodes.keySet()) {
-        if (i > goal) {
-          if (succ == null) {
-            succ = i;
-          } else {
-            if (i < succ) {
-              succ = i;
-            }
-          }
-        }
-      }
+      Integer succ = steps.successor(goal);
       if (succ == null) {
         return null;
         // return the root, or maybe this means our ladders are wrong?
