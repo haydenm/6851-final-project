@@ -38,17 +38,23 @@ public class XFastTrie {
     
     XFastNode lastFoundAncestor = null;
     
-    while (levelLo < levelHi) {
+    while (levelLo <= levelHi) {
       int levelMid = levelLo + (levelHi - levelLo) / 2;
       int prefixLengthAtLevel = (numLevels - 1) - levelMid;
       int keyPrefix = XFastInternalNode.prefixOfKey(key, prefixLengthAtLevel,
           numLevels);
-      boolean levelHasPrefix = hashTables[levelMid].containsKey(keyPrefix);
+      boolean levelHasPrefix = levelMid == numLevels - 1 ?    // The top level always
+          true : hashTables[levelMid].containsKey(keyPrefix); // has the prefix.
       
       if (levelHasPrefix) {
-        lastFoundAncestor = hashTables[levelMid].get(keyPrefix);
+        lastFoundAncestor = levelMid == numLevels - 1 ?
+            root : hashTables[levelMid].get(keyPrefix);
         // The lowest ancestor must be here or below, so search the current
         // level and below.
+        if (levelLo == levelHi) {
+          // There's nowhere else to search.
+          break;
+        }
         levelHi = levelMid;
       } else {
         // The lowest ancestor must be higher, so search above the current level.
