@@ -188,6 +188,8 @@ public class XFastTrie {
       
       // We need an extra level for the root.
       numLevels = (int) Math.ceil(Math.log(universeSize) / Math.log(2)) + 1;
+      if (universeSize == 1)
+        numLevels++;
 
       // Build the trie. Takes O(n * log(universeSize)) time.
       root = new XFastInternalNode(-1, 0, numLevels);

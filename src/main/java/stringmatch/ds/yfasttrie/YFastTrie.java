@@ -118,6 +118,8 @@ public class YFastTrie {
       universeSize = maxKey + 1;
       
       bbstSize = (int) Math.ceil(Math.log(universeSize) / Math.log(2));
+      if (universeSize == 1)
+        bbstSize++;
       numBBSTs = (int) Math.ceil(numKeys / bbstSize);
       
       bbsts = new CuckooHashMap<Integer, TreeSet<Integer>>();
