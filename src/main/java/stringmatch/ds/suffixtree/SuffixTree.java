@@ -97,16 +97,16 @@ public class SuffixTree {
    * suffix tree, or null if there is no such prefix. No wildcards allowed.
    */
   public Node query(Text p) {
-    return queryHelper(p, 0, root);
+    return query(p, 0, root);
   }
 
-  private Node queryHelper(Text p, int start, Node current) {
+  private Node query(Text p, int start, Node current) {
     if (start >= p.getSize()) {
       return current;
     }
     Edge e = current.follow(p.getCharAtIndex(start));
     if (checkMatch(p, start, e, false)) {
-      return queryHelper(p, start + e.getTextSubstring().length, e.getToNode());
+      return query(p, start + e.getTextSubstring().length, e.getToNode());
     }
     return null;
   }
@@ -121,10 +121,10 @@ public class SuffixTree {
    * suffix tree, or null if there is no such prefix. Allows wildcards.
    */
   public List<Node> naiveWildcardQuery(Text p) {
-    return naiveWildcardQueryHelper(p, 0, root);
+    return naiveWildcardQuery(p, 0, root);
   }
 
-  private List<Node> naiveWildcardQueryHelper(Text p, int start, Node current) {
+  private List<Node> naiveWildcardQuery(Text p, int start, Node current) {
     List<Node> results = new ArrayList<Node>();
     if (start >= p.getSize()) {
       results.add(current);
@@ -132,13 +132,13 @@ public class SuffixTree {
     }
     Edge e = current.follow(p.getCharAtIndex(start));
     if (checkMatch(p, start, e, true)) {
-      results.addAll(naiveWildcardQueryHelper(p, start
+      results.addAll(naiveWildcardQuery(p, start
           + e.getTextSubstring().length, e.getToNode()));
     }
     for (Edge next : current.getOutgoingEdges()) {
       if (p.getCharAtIndex(start).isWild()) {
         if (checkMatch(p, start, next, true)) {
-          results.addAll(naiveWildcardQueryHelper(p,
+          results.addAll(naiveWildcardQuery(p,
               start + next.getTextSubstring().length, next.getToNode()));
         }
       }
@@ -150,23 +150,23 @@ public class SuffixTree {
    * Print out the tree in a readable form.
    */
   protected void printTree() {
-    printTreeHelper("", root, "ROOT", true);
+    printTree("", root, "ROOT", true);
   }
 
-  protected void printTreeHelper(String prefix, Node n, String label, boolean leaf) {
+  protected void printTree(String prefix, Node n, String label, boolean leaf) {
     System.out.println(prefix + (leaf ? "|-- " : "|-- ") + label);
     // System.out.println(n);
     if (n.outgoingEdges != null && n.outgoingEdges.size() > 0) {
       for (int i = 0; i < n.outgoingEdges.size() - 1; i++) {
         Edge e = n.outgoingEdges.get(i);
         String l = e.toString();
-        printTreeHelper(prefix + (leaf ? "    " : "|   "), e.getToNode(), l,
+        printTree(prefix + (leaf ? "    " : "|   "), e.getToNode(), l,
             false);
       }
       if (n.outgoingEdges.size() >= 1) {
         Edge e = n.outgoingEdges.get(n.outgoingEdges.size() - 1);
         String l = e.toString();
-        printTreeHelper(prefix + (leaf ? "    " : "|   "), e.getToNode(), l,
+        printTree(prefix + (leaf ? "    " : "|   "), e.getToNode(), l,
             true);
       }
     }
@@ -231,6 +231,56 @@ public class SuffixTree {
   }
   
   /*
+   * Make sure each node in the tree has a pointer to its first reference in LCAOrder
+   */
+  private void updateIndices() {
+    for (int i = 0; i < LCAOrder.size(); i++) {
+      if (LCAOrder.get(i).getRight().LCAIndex == -1) {
+        LCAOrder.get(i).getRight().LCAIndex = i;
+      }
+    }
+  }
+  
+  /* 
+   * Get the index of the minimum element in LCAOrder between i and j (inclusive).
+   * Used for LCA queries.
+   */
+  public int RMQ(int i, int j) {
+    if (i > j) {
+      int tmp = i;
+      i = j;
+      j = tmp;
+    }
+    int width = (int) Math.pow(2, Math.floor(log2(j - i)));
+    int min1;
+    int min2;
+    if (width <= 1) {
+      min1 = i;
+      min2 = j;
+    } else {
+      min1 = LCATable.get(i).get(width);
+      min2 = LCATable.get(j - width).get(width);
+    }
+    if (LCAOrder.get(min1).getLeft() <= LCAOrder.get(min2).getLeft()) {
+      return min1;
+    } else {
+      return min2;
+    }
+  }
+  
+  /*
+   * Get the LCA of two nodes in the suffix tree
+   */
+  public Node LCA(Node n1, Node n2) {
+    int min_index = RMQ(n1.LCAIndex, n2.LCAIndex);
+    return LCAOrder.get(min_index).getRight();
+  }
+  
+  public static double log2(int x) {
+    return Math.log(x) / Math.log(2);
+  }
+  
+  /*
    * Build the look-up table used for MA (implementing jump pointers). For each node in the graph,
    * the table stores the point 2^i steps above. It stores the point as a pair, where the first element
    * is either this point or the node above this point if the point appears on the edge. The second
@@ -272,57 +322,20 @@ public class SuffixTree {
     return inner;
   }
   
-  private void updateIndices() {
-    for (int i = 0; i < LCAOrder.size(); i++) {
-      if (LCAOrder.get(i).getRight().LCAIndex == -1) {
-        LCAOrder.get(i).getRight().LCAIndex = i;
-      }
-    }
-  }
-  
-  public Node LCA(Node n1, Node n2) {
-    int min_index = RMQ(n1.LCAIndex, n2.LCAIndex);
-    return LCAOrder.get(min_index).getRight();
-  }
-  
-  public static double log2(int x) {
-    return Math.log(x) / Math.log(2);
-  }
-  
-  public int RMQ(int i, int j) {
-    if (i > j) {
-      int tmp = i;
-      i = j;
-      j = tmp;
-    }
-    int width = (int) Math.pow(2, Math.floor(log2(j - i)));
-    int min1;
-    int min2;
-    if (width <= 1) {
-      min1 = i;
-      min2 = j;
-    } else {
-      min1 = LCATable.get(i).get(width);
-      min2 = LCATable.get(j - width).get(width);
-    }
-    if (LCAOrder.get(min1).getLeft() <= LCAOrder.get(min2).getLeft()) {
-      return min1;
-    } else {
-      return min2;
-    }
-  }
-  
+  /*
+   * For each element, compute the maximum height above any of its descendants
+   */
   public void computeHeights() {
-    computeHeightsHelper(root);
+    computeHeights(root);
   }
   
-  public int computeHeightsHelper(Node node) {
+  public int computeHeights(Node node) {
     if (node.isLeaf()) {
       node.maxHeight = 0;
     } else {
       for (Edge e: node.outgoingEdges) {
         Node child = e.getToNode();
-        int childHeight = computeHeightsHelper(child);
+        int childHeight = computeHeights(child);
         if (childHeight + e.getLength() > node.maxHeight) {
           node.maxHeight = childHeight + e.getLength();
           node.longPathEdge = e;
@@ -332,18 +345,21 @@ public class SuffixTree {
     return node.maxHeight;
   }
   
+  /*
+   * Decompose the suffix tree into long paths. Give each node a pointer to the long
+   * path on which it belongs
+   */
   public void buildLongPaths() {
-    buildLongPathsHelper(root);
+    buildLongPaths(root);
   }
   
-  public void buildLongPathsHelper(Node node) {
-    //System.out.println(node);
+  public void buildLongPaths(Node node) {
     Path path = new Path();
     Node current = node;
     while (current != null) {
       for (Edge e: current.outgoingEdges) {
         if (e!= current.longPathEdge) {
-          buildLongPathsHelper(e.getToNode());
+          buildLongPaths(e.getToNode());
         }
       }
       int height = path.addNode(current);
@@ -357,11 +373,14 @@ public class SuffixTree {
     }
   }
   
+  /*
+   * Extend each long path upwards to be twice as tall
+   */
   public void extendLadders() {
-    extendLaddersHelper(root);
+    extendLadders(root);
   }
   
-  public void extendLaddersHelper(Node node) {
+  public void extendLadders(Node node) {
     Path path = node.ladder.getRight();
     int nodeHeight = node.ladder.getLeft();
     int height = node.ladder.getRight().getLength();
@@ -373,16 +392,23 @@ public class SuffixTree {
         path.prependNode(current);
         e = current.incomingEdge;
       }
-      System.out.println(path);
-      //System.out.println(path.order);
       path.buildYFastTrie();
     }
     for (Edge e: node.outgoingEdges) {
-        extendLaddersHelper(e.getToNode());
+        extendLadders(e.getToNode());
     }
   }
   
+  /*
+   * Compute the measured ancestor of a node. Returns a pair containing either the resulting node
+   * (if the measured ancestor is a node) or the next node above the edge where the measured ancestor
+   * was. Also contains an interger corresponding to the distance below the node where the measured
+   * ancestor can be found. 
+   */
   public Pair<Node, Integer> MA(Node node, int k) {
+    if (k == 0) {
+      return new Pair<Node, Integer>(node, 0);
+    }
     int jump = (int) Math.pow(2, Math.floor(log2(k)));
     Pair<Node, Integer> res = MATable.get(node).get(jump);
     System.out.println(jump);
@@ -416,7 +442,7 @@ public class SuffixTree {
     Node n2 = st.root.follow(A).getToNode().follow(N).getToNode().follow(N).getToNode().follow(B).getToNode().follow(B).getToNode().follow(B).getToNode();
     //System.out.println(st.LCA(n1, n2));
     //System.out.println(st.root.maxHeight);
-    System.out.println(st.MA(n2, 15));
+    System.out.println(st.MA(n2, 0));
 
   }
 
