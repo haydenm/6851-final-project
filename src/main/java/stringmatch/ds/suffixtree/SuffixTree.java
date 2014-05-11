@@ -13,12 +13,7 @@ import stringmatch.ds.suffixtree.Node;
 
 /*
  * Stores a suffix tree.
- * Builds it using Ukkonen's algorithm, as described in:
- * http://stackoverflow.com/questions/9452701/ukkonens-suffix-tree-algorithm-in-plain-english/
- *
- * Based largely on:
- * https://github.com/maxgarfinkel/suffixTree/
- */
+*/
 
 public class SuffixTree {
 
@@ -379,6 +374,13 @@ public class SuffixTree {
     st.extendLadders();
   }
 
+ /*
+  * Builds the suffix tree using Ukkonen's algorithm, as described in:
+  * http://stackoverflow.com/questions/9452701/ukkonens-suffix-tree-algorithm-in-plain-english/
+  *
+  * Based largely on:
+  * https://github.com/maxgarfinkel/suffixTree/
+  */
   public static class Builder {
     protected Node root;
     private ActivePoint activePoint;
@@ -397,7 +399,7 @@ public class SuffixTree {
       lastInsertedNode = null;
       prefixStart = 0;
       prefixEnd = 0;
-      endPosition = 1;
+      endPosition = 0;
 
       this.inputText = inputText;
     }
@@ -417,16 +419,15 @@ public class SuffixTree {
         TextSubstring prefix = new TextSubstring(inputText, prefixStart, length);
         insertsAtStep = 0;
         addSubstring(prefix);
-        if (prefixEnd < inputText.getLength())
-          endPosition++;
+        endPosition++;
       }
     }
 
     private void addSubstring(TextSubstring substr) {
-      if (activePoint.isInsideEdge())
-        addIntoEdge(substr);
-      else if (activePoint.isOnNode())
+      if (activePoint.isOnNode())
         addOntoNode(substr);
+      else if (activePoint.isInsideEdge())
+        addIntoEdge(substr);
     }
 
     private void addOntoNode(TextSubstring substr) {
@@ -459,19 +460,23 @@ public class SuffixTree {
         prefixStart++;
         TextSubstring newSubstr = new TextSubstring(inputText, prefixStart,
             prefixEnd - prefixStart);
+        // activeNode as used below should stay as is, even if activePoint.getActiveNode()
+        // changes with the call immediately below.
         resetWithSuffixLinks(newSubstr);
-        if (insertsAtStep > 0 && activePoint.getActiveNode() != root) {
-          lastInsertedNode.setSuffixLink(activePoint.getActiveNode());
-          lastInsertedNode = activePoint.getActiveNode();
+        if (insertsAtStep > 0 && activeNode != root) {
+          lastInsertedNode.setSuffixLink(activeNode);
+          lastInsertedNode = activeNode;
         }
-        if (newSubstr.getStartIndex() < newSubstr.getEndIndex())
+        if (newSubstr.getStartIndex() < newSubstr.getEndIndex() &&
+            newSubstr.getEndIndex() <= newSubstr.getText().getLength())
           addSubstring(newSubstr);
       }
     }
 
     protected void resetWithSuffixLinks(TextSubstring currentSubstr) {
       if (activePoint.getActiveNode() == root
-          && currentSubstr.getStartIndex() >= currentSubstr.getEndIndex()) {
+          && (currentSubstr.getStartIndex() >= currentSubstr.getEndIndex() ||
+          currentSubstr.getEndIndex() > currentSubstr.getText().getLength())) {
         // Start back at root.
         activePoint.setActiveEdge(null);
         activePoint.setActiveLength(0);
@@ -481,6 +486,7 @@ public class SuffixTree {
       if (activePoint.getActiveNode() == root) {
         // Move into edge.
         AlphabetCharacter substrFirstChar = currentSubstr.getFirstChar();
+        activePoint.setActiveEdge(null);
         for (Edge outgoingEdge : activePoint.getActiveNode().getOutgoingEdges()) {
           if (outgoingEdge.getTextSubstring().getFirstChar()
               .equals(substrFirstChar)) {

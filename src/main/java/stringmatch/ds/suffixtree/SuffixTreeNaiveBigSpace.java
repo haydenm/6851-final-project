@@ -62,8 +62,6 @@ public class SuffixTreeNaiveBigSpace extends SuffixTree {
     // just comparing against an edge text and allowing wildcards in the
     // comparison.
     Edge edgeToFollow = current.follow(firstChar);
-    if (edgeToFollow != null)
-      System.out.println("Checking " + edgeToFollow.getTextSubstring().toString());
     if (checkMatch(p, pStart, edgeToFollow, true)) {
       return query(p, pStart + edgeToFollow.getTextSubstring().getLength(),
           edgeToFollow.getToNode());

@@ -131,6 +131,19 @@ public class SuffixTreeTest {
     }
   }
   
+  @Test
+  public void testRandomStringSuffixes() {
+    StringBuilder sb = new StringBuilder();
+    Random r = new Random(123L);
+    for (int i = 0; i < 1000; i++) {
+      sb.append((char)(r.nextInt(26) + (int)'A'));
+    }
+    Text t = new Text(sb.toString(), true);
+    SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(t);
+    SuffixTree st = suffixTreeBuilder.build();
+    assertEquals(generateAllSuffixesOfText(t), st.getAllSuffixesAsStrings());
+  }
+  
   // Outputs all suffixes of t, except '$'.
   public static List<String> generateAllSuffixesOfText(Text t) {
     List<String> suffixes = new ArrayList<String>();

@@ -21,6 +21,7 @@ import stringmatch.ds.util.Pair;
 public class SuffixTreeNaiveBigSpaceTest {
 
   @Test
+  @Ignore
   public void testBanana() {
     SuffixTreeNaiveBigSpace.Builder suffixTreeBuilder = new SuffixTreeNaiveBigSpace.Builder(new Text("BANANAB", true), 2);
     SuffixTreeNaiveBigSpace st = suffixTreeBuilder.build();
@@ -31,12 +32,12 @@ public class SuffixTreeNaiveBigSpaceTest {
   @Test
   public void testBuild() {
     String s = "";
-    Random r = new Random();
+    Random r = new Random(123L);
     for (int i = 0; i < 60; i++) {
       s += String.valueOf((char)(r.nextInt(26)+'A'));
       //s += "BANANA";
     }
-    System.out.println("building");
+    //System.out.println("building");
     SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(new Text(s, true));
     SuffixTree st = suffixTreeBuilder.build();
     //st.printTree();
@@ -46,7 +47,7 @@ public class SuffixTreeNaiveBigSpaceTest {
   }
   
   @Test
-  @Ignore
+  //@Ignore
   public void testSuffixes() {
     String[] strs = new String[] {
         "BANANA",
@@ -171,6 +172,19 @@ public class SuffixTreeNaiveBigSpaceTest {
       
       assertEquals(expectedList, matches);
     }
+  }
+  
+  @Test
+  public void testMatchCount() {
+    StringBuilder sb = new StringBuilder();
+    Random r = new Random();
+    for (int i = 0; i < 10000; i++) {
+      sb.append((char)(r.nextInt(26) + (int)'A'));
+    }
+    SuffixTreeNaiveBigSpace.Builder suffixTreeBuilder = new SuffixTreeNaiveBigSpace.Builder(new Text(sb.toString(), true), 3);
+    SuffixTreeNaiveBigSpace st = suffixTreeBuilder.build();
+    //st.printTree();
+    System.out.println("Number of matches: " + st.queryForIndices(new Text("H**A*", false)).size());
   }
   
 }
