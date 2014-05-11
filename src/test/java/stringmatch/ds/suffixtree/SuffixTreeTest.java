@@ -3,6 +3,8 @@ package stringmatch.ds.suffixtree;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -106,6 +108,40 @@ public class SuffixTreeTest {
 	  expected.add(node2);
 	  expected.add(node3);
 	  assertEquals(expected, st.naiveWildcardQuery(new Text("**", false)));
+  }
+  
+  @Test
+  public void testSuffixes() {
+    String[] strs = new String[] {
+        "BANANA",
+        "BANANABANANA",
+        "BANANABANANABANANA",
+        "B",
+        "ABC",
+        "BANDANA",
+        "BANANAC",
+        "BANANXYZANA"
+        };
+    
+    for (String s : strs) {
+      Text t = new Text(s, true);
+      SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(t);
+      SuffixTree st = suffixTreeBuilder.build();
+      assertEquals(generateAllSuffixesOfText(t), st.getAllSuffixesAsStrings());
+    }
+  }
+  
+  // Outputs all suffixes of t, except '$'.
+  public static List<String> generateAllSuffixesOfText(Text t) {
+    List<String> suffixes = new ArrayList<String>();
+    String s = t.toString();
+    for (int i = 0; i < s.length(); i++) {
+      String suffix = s.substring(i, s.length());
+      if (!suffix.equals("$"))
+        suffixes.add(suffix);
+    }
+    Collections.sort(suffixes);
+    return suffixes;
   }
   
 }

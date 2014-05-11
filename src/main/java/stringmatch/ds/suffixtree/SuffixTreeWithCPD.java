@@ -14,8 +14,8 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
   
   public static class Builder extends SuffixTreeWithWildcards.Builder {
     
-    public Builder(Text inputText) {
-      super(inputText);
+    public Builder(Text inputText, int k) {
+      super(inputText, k);
     }  
     
     protected static void findCentroidPaths(Node node) {
@@ -39,8 +39,8 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       }
     }
     
-    protected static void addWildcardSubtreesAt(Node node) {   
-      if (node.isLeaf)
+    protected static void addWildcardSubtreesAt(Node node, int k) {   
+      if (node.isLeaf || k <= 0)
         return;
       
       // Make the wildcard subtree to be attached to node, without the
@@ -81,7 +81,8 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       // Recursively add wildcard subtrees.
       for (Edge edge : node.outgoingEdges) {
         // Recursively add them to the new wildcard subtree as well.
-        addWildcardSubtreesAt(edge.getToNode());
+        int newK = edge.isWildcardEdge() ? k - 1 : k;
+        addWildcardSubtreesAt(edge.getToNode(), newK);
       }
     }
     
@@ -92,7 +93,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       findCentroidPaths(root);
       
       // Add wildcards (without including centroid edges).
-      addWildcardSubtreesAt(root);
+      addWildcardSubtreesAt(root, k);
       
       return new SuffixTreeWithCPD(this);
     }

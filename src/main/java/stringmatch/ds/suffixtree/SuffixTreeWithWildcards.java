@@ -5,12 +5,12 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import stringmatch.ds.suffixtree.SuffixTree.Builder;
 import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
-import stringmatch.ds.text.TextSubstring;
 
-public class SuffixTreeWithWildcards extends SuffixTree {
+public abstract class SuffixTreeWithWildcards extends SuffixTree {
+  
+  protected int k; // The number of wildcards.
   
   public SuffixTreeWithWildcards() { }
   
@@ -18,11 +18,14 @@ public class SuffixTreeWithWildcards extends SuffixTree {
     root = builder.root;
   }
 
-  public static class Builder extends SuffixTree.Builder {
+  public abstract static class Builder extends SuffixTree.Builder {
 
-    public Builder(Text inputText) {
+    protected int k; // The number of wildcards.
+    
+    public Builder(Text inputText, int k) {
       super(inputText);
       root = super.build().root;
+      this.k = k;
     } 
     
     /*
