@@ -19,8 +19,11 @@ public class SuffixTree {
 
   protected Node root;
   
+  // Used for LCA queries
   private List<Pair<Integer, Node>> LCAOrder;
   Map<Integer, Map<Integer, Integer>> LCATable;
+  
+  // Used or MA queries
   Map<Node, Map<Integer, Pair<Node, Integer>>> MATable;
 
   protected SuffixTree() { }
@@ -143,11 +146,14 @@ public class SuffixTree {
     return results;
   }
 
-  public void printTree() {
+  /*
+   * Print out the tree in a readable form.
+   */
+  protected void printTree() {
     printTreeHelper("", root, "ROOT", true);
   }
 
-  public void printTreeHelper(String prefix, Node n, String label, boolean leaf) {
+  protected void printTreeHelper(String prefix, Node n, String label, boolean leaf) {
     System.out.println(prefix + (leaf ? "|-- " : "|-- ") + label);
     // System.out.println(n);
     if (n.outgoingEdges != null && n.outgoingEdges.size() > 0) {
@@ -166,7 +172,11 @@ public class SuffixTree {
     }
   }
   
-  public List<Pair<Integer, Node>> eulerTour() {
+  /*
+   * Perform an euler tour on the tree, recording the depth of each node. This is
+   * used for LCA.
+   */
+  private List<Pair<Integer, Node>> eulerTour() {
     return eulerTour(0, root);
   }
 
@@ -184,6 +194,10 @@ public class SuffixTree {
     return order;
   }
   
+  /*
+   * Find the minimum of LCAOrder between indices start and end. Takes time
+   * O(len(LCAOrder)), should only be used for pre-processing.
+   */
   private int findMin(int start, int end) {
     int min = LCAOrder.get(start).getLeft();
     int index = start;
@@ -197,6 +211,11 @@ public class SuffixTree {
     return index;
   }
   
+  /*
+   * Build the look-up table used for LCA. For each index in LCAOrder, the table stores
+   * the index of the minimum element between that index and the index 2^i to the right,
+   * for all values of i.
+   */
   private Map<Integer, Map<Integer, Integer>> buildLCATable() {
     Map<Integer, Map<Integer, Integer>> table = new HashMap<Integer, Map<Integer, Integer>>();
     for (int index = 0; index < LCAOrder.size(); index++) {
@@ -211,18 +230,24 @@ public class SuffixTree {
     return table;
   }
   
+  /*
+   * Build the look-up table used for MA (implementing jump pointers). For each node in the graph,
+   * the table stores the point 2^i steps above. It stores the point as a pair, where the first element
+   * is either this point or the node above this point if the point appears on the edge. The second
+   * element represents the distance that that point occurs below the node.
+   */
   private Map<Node, Map<Integer, Pair<Node, Integer>>> buildMATable() {
     Map<Node, Map<Integer, Pair<Node, Integer>>> table = new HashMap<Node, Map<Integer, Pair<Node, Integer>>>();
-    buildMATableHelper(root, table);
+    buildMATable(root, table);
     return table;
   }
   
-  private void buildMATableHelper(Node node, Map<Node, Map<Integer, Pair<Node, Integer>>> table) {
+  private void buildMATable(Node node, Map<Node, Map<Integer, Pair<Node, Integer>>> table) {
     for (Edge e: node.outgoingEdges) {
       Node n = e.getToNode();
       Map<Integer, Pair<Node, Integer>> inner = buildInnerMATable(n);
       table.put(n, inner);
-      buildMATableHelper(n, table);
+      buildMATable(n, table);
     }
   }
   
