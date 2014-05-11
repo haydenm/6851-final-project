@@ -82,6 +82,7 @@ public class ActivePoint {
       
       int substrFindIndex = currentSubstr.getLength() - (activeLength + 1);
       AlphabetCharacter substrFindChar = currentSubstr.getIthChar(substrFindIndex);
+      activeEdge = null;
       for (Edge outgoingEdge : activeNode.getOutgoingEdges()) {
         if (outgoingEdge.getTextSubstring().getFirstChar().equals(substrFindChar)) {
           activeEdge = outgoingEdge;
@@ -90,10 +91,10 @@ public class ActivePoint {
       }
     }
     
+    moveToActiveEdgeEndpointIfNeeded();
+       
     if (activeLength == 0)
       activeEdge = null;
-    
-    moveToActiveEdgeEndpointIfNeeded();
   }
   
   protected void updateActiveEdgeAfterNodeChange() {
@@ -102,6 +103,7 @@ public class ActivePoint {
     
     AlphabetCharacter activeEdgeFirstChar = activeEdge.getTextSubstring().
         getFirstChar();
+    activeEdge = null;
     for (Edge outgoingEdge : activeNode.getOutgoingEdges()) {
       if (outgoingEdge.getTextSubstring().getFirstChar().
           equals(activeEdgeFirstChar)) {
