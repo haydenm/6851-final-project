@@ -34,6 +34,9 @@ public class SuffixTree {
     LCAOrder = eulerTour();
     LCATable = buildLCATable();
     MATable = buildMATable();
+    computeHeights();
+    buildLongPaths();
+    extendLadders();
   }
 
   public Node getRoot() {
@@ -345,16 +348,38 @@ public class SuffixTree {
         path.prependNode(current);
         e = current.incomingEdge;
       }
-      System.out.println(path);
+      //System.out.println(path);
+      //System.out.println(path.order);
+      path.buildYFastTrie();
     }
     for (Edge e: node.outgoingEdges) {
         extendLaddersHelper(e.getToNode());
     }
   }
+  
+  public Pair<Node, Integer> MA(Node node, int k) {
+    int jump = (int) Math.pow(2, Math.floor(log2(k)));
+    Pair<Node, Integer> res = MATable.get(node).get(jump);
+    System.out.println(jump);
+    System.out.println(res);
+    int diff = res.getLeft().maxHeight - node.maxHeight;
+    // We've already made it up at least k
+    if (diff > k) {
+      System.out.println("GOOD");
+      return new Pair<Node, Integer>(res.getLeft(), res.getRight() - (k - jump));
+    // Otherwise we need to look up in a ladder
+    } else {
+      System.out.println("LADDER");
+      Path ladder = res.getLeft().ladder.getRight();
+      int rem = k - diff;
+      return ladder.jump(res.getLeft().maxHeight, rem);
+    }
+    
+  }
 
   public static void main(String[] args) {
     SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(new Text(
-        "BBAABBBB", true));
+        "BANANABANANA", true));
     SuffixTree st = suffixTreeBuilder.build();
     st.printTree();
     //System.out.println(st.eulerTour(0, st.root));
@@ -362,13 +387,11 @@ public class SuffixTree {
     AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
     AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
     AlphabetCharacter D = new AlphabetCharacter(new Character('$'));
-    //Node n1 = st.root.follow(N).getToNode().follow(D).getToNode();
-    //Node n2 = st.root.follow(A).getToNode().follow(N).getToNode();
+    Node n1 = st.root.follow(B).getToNode();
+    Node n2 = st.root.follow(N).getToNode().follow(N).getToNode().follow(B).getToNode();
     //System.out.println(st.LCA(n1, n2));
-    st.computeHeights();
     //System.out.println(st.root.maxHeight);
-    st.buildLongPaths();
-    st.extendLadders();
+    System.out.println(st.MA(n2, 10));
 
   }
 

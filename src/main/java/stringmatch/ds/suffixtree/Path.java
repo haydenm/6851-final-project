@@ -1,50 +1,61 @@
 package stringmatch.ds.suffixtree;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import stringmatch.ds.util.Pair;
+import stringmatch.ds.yfasttrie.YFastTrie;
 
 public class Path {
   
   protected Map<Integer, Node> nodes;
-  protected Pair<Integer, Node> last;
-  protected Pair<Integer, Node> first;
+  protected LinkedList<Integer> order;
+  protected YFastTrie steps;
   
   protected Path() {
     nodes = new HashMap<Integer, Node>();
+    order = new LinkedList<Integer>();
   }
   
   protected int addNode(Node node) {
-    if (last == null) {
+    if (order.size() == 0) {
       nodes.put(node.maxHeight, node);
-      Pair<Integer, Node> p = new Pair<Integer, Node>(node.maxHeight, node);
-      first = p;
-      last = p;
+      order.addLast(node.maxHeight);
       return node.maxHeight;
-    } else if (node.incomingEdge.getFromNode() == last.getRight()) {
-      int height = last.getLeft() - node.incomingEdge.getLength();
-      nodes.put(height, node);
-      last = new Pair<Integer, Node>(height, node);
-      return height;
     } else {
-      throw new RuntimeException("Appending node to path which doesn't follow");
+      int lastHeight = order.peekLast();
+      Node last = nodes.get(lastHeight);
+      if (node.incomingEdge.getFromNode() == last) {
+        int height = lastHeight - node.incomingEdge.getLength();
+        nodes.put(height, node);
+        order.addLast(height);
+        return height;
+      } else {
+        throw new RuntimeException("Appending node to path which doesn't follow");
+      }
     }
   }
   
   protected int prependNode(Node node) {
-    if (first == null) {
+    if (order.size() == 0) {
       nodes.put(node.maxHeight, node);
-      Pair<Integer, Node> p = new Pair<Integer, Node>(node.maxHeight, node);
-      first = p;
+      order.addFirst(node.maxHeight);
       return node.maxHeight;
-    } else if (first.getRight().incomingEdge.getFromNode() == node) {
-      int height = first.getLeft() + first.getRight().incomingEdge.getLength();
-      nodes.put(height, node);
-      first = new Pair<Integer, Node>(height, node);
-      return height;
     } else {
-      throw new RuntimeException("Prepending node to path which doesn't follow");
+      int firstHeight = order.peekFirst();
+      Node first = nodes.get(firstHeight);
+      if (first.incomingEdge.getFromNode() == node) {
+        int height = firstHeight + first.incomingEdge.getLength();
+        nodes.put(height, node);
+        order.addFirst(height);
+        return height;
+      } else {
+        throw new RuntimeException("Prepending node to path which doesn't follow");
+      }
     }
     
   }
@@ -57,7 +68,46 @@ public class Path {
     return sb.toString();
   }
   
+  public void buildYFastTrie() {
+    List<Integer> keys = new ArrayList<Integer>();
+    Iterator<Integer> i = order.descendingIterator();
+    while (i.hasNext()) {
+      keys.add(i.next());
+    }
+    YFastTrie.Builder builder = new YFastTrie.Builder();
+    steps = builder.buildFromKeys(keys);
+  }
+  
   public int getLength() {
-    return first.getLeft();
+    return order.peekFirst();
+  }
+  
+  public Pair<Node, Integer> jump(int start, int query) {
+    int goal = start + query;
+    if (nodes.containsKey(goal)) {
+      return new Pair<Node, Integer>(nodes.get(goal), 0);
+    } else {
+      //Integer succ = steps.successor(goal);
+      Integer succ = null;
+      for (Integer i: nodes.keySet()) {
+        if (i > goal) {
+          if (succ == null) {
+            succ = i;
+          } else {
+            if (i < succ) {
+              succ = i;
+            }
+          }
+        }
+      }
+      if (succ == null) {
+        return null;
+        // return the root, or maybe this means our ladders are wrong?
+      } else {
+        Node next = nodes.get(succ);
+        int offset = succ - goal;
+        return new Pair<Node, Integer>(next, offset);
+      }
+    }
   }
 }
