@@ -20,7 +20,7 @@ public class Path {
   // keys in nodes.
   protected Map<Integer, Node> nodes;
   protected LinkedList<Integer> order;
-  protected YFastTrie steps;
+  protected YFastTrie<Object> steps;
   
   protected Path() {
     nodes = new HashMap<Integer, Node>();
@@ -85,13 +85,14 @@ public class Path {
    * Build the y-fast tree of the keys in nodes.
    */
   public void buildYFastTrie() {
-    List<Integer> keys = new ArrayList<Integer>();
+    List<Pair<Integer, Object>> keys = new ArrayList<Pair<Integer, Object>>();
     Iterator<Integer> i = order.descendingIterator();
+    Object o = new Object();
     while (i.hasNext()) {
-      keys.add(i.next());
+      keys.add(new Pair<Integer, Object>(i.next(), o));
     }
-    YFastTrie.Builder builder = new YFastTrie.Builder();
-    steps = builder.buildFromKeys(keys);
+    YFastTrie.Builder<Object> builder = new YFastTrie.Builder<Object>();
+    steps = builder.buildFromPairs(keys);
   }
   
   // The length of the path is the max height of the first node
@@ -109,7 +110,7 @@ public class Path {
     if (nodes.containsKey(goal)) {
       return new Pair<Node, Integer>(nodes.get(goal), 0);
     } else {
-      Integer succ = steps.successor(goal);
+      Integer succ = steps.successor(goal).getLeft();
       if (succ == null) {
         throw new RuntimeException("A jump query in a ladder exceeded the height of the ladder");
       } else {
