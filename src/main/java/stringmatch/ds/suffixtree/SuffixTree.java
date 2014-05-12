@@ -56,6 +56,17 @@ public class SuffixTree {
     }
     return allSuffixesAsStrings;
   }
+  
+  public void printNode(Node node) {
+    String s = "";
+    Edge e = node.incomingEdge;
+    while (e != null) {
+      s = e.toString() + s;
+      Node n = e.getFromNode();
+      e = n.incomingEdge;
+    }
+    System.out.println(s);
+  }
     
   /* 
    * Checks that following an edge matches all the characters along the edge. If allowWildcards

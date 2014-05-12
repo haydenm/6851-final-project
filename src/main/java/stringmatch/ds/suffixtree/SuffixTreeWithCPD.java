@@ -40,7 +40,8 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     List<Text> subQueries = breakQuery(p);
     Text query = subQueries.get(0);
     Pair<Node, Integer> prev = slowRootedLCP(query);
-    System.out.println(prev);
+    //System.out.println("PREV");
+    //System.out.println(prev);
     if (subQueries.size() > 1) {
       return smartQuery(subQueries, 1, prev);
     } else {
@@ -54,26 +55,48 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     List<Pair<Node, Integer>> matches = new ArrayList<Pair<Node, Integer>>();
     if (prev.getRight() == 0) {
       // Check wildcard subtree
-      SuffixTreeWithCPD w =
-          (SuffixTreeWithCPD) ((WildcardEdge) prev.getLeft().follow(AlphabetCharacter.WILDCARD)).wildcardTree;
-      Pair<Node, Integer> res1 = w.slowRootedLCP(subQueries.get(i));
-      if (res1 != null) {
-        matches.addAll(w.smartQuery(subQueries, i + 1, res1));
+      WildcardEdge wce =  (WildcardEdge) prev.getLeft().follow(AlphabetCharacter.WILDCARD);
+      if (wce != null) {
+        SuffixTreeWithCPD w = (SuffixTreeWithCPD) wce.wildcardTree;
+        Pair<Node, Integer> res1 = w.slowRootedLCP(subQueries.get(i));
+        //System.out.println("WILDCARD RES");
+        //System.out.println(res1);
+        if (res1 != null) {
+          if (subQueries.size() > i + 1) {
+            matches.addAll(w.smartQuery(subQueries, i + 1, res1));
+          } else {
+            //System.out.println("USE WILDCARD");
+            matches.add(res1);
+          }
+        }
       }
       // Check along centroid path
       Edge e = prev.getLeft().centroidEdge;
       Pair<Node, Integer> next = new Pair<Node, Integer>(e.getToNode(), 1 - e.getLength());
+      //System.out.println("CENTROID NEXT");
+      //System.out.println(next);
       Pair<Node, Integer> res2 = slowUnrootedLCP(subQueries.get(i), next);
+      //System.out.println(res2);
       if (res2 != null) {
-        matches.addAll(smartQuery(subQueries, i + 1, res2));
+        if (subQueries.size() > i + 1) {
+          matches.addAll(smartQuery(subQueries, i + 1, res2));
+        } else {
+          //System.out.println("HERE");
+          matches.add(res2);
+        }
       }
     } else {
       // Just check along current path
       Pair<Node, Integer> next = new Pair<Node, Integer>(prev.getLeft(), prev.getRight() + 1);
+      System.out.println("NEXT");
       System.out.println(next);
       Pair<Node, Integer> res = slowUnrootedLCP(subQueries.get(i), next);
       if (res != null) {
-        matches.addAll(smartQuery(subQueries, i + 1, res));
+        if (subQueries.size() > i + 1) {
+          matches.addAll(smartQuery(subQueries, i + 1, res));
+        } else {
+          matches.add(res);
+        }
       }
     }
     return matches;
@@ -90,7 +113,6 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     if (e == null || e.getLength() + offset < 0) {
       throw new RuntimeException("Malformed unrooted LCP query");
     }
-    System.out.println(e.getLength() + offset);
     if (!checkMatch(p, 0, e, e.getLength() + offset)) {
       return null;
     } else {
@@ -116,15 +138,13 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
         len += 1;
       }
     }
-    if (len > 0) {
-      subQueries.add(new Text(p.toString().substring(start, start + len), false));
-    }
+    subQueries.add(new Text(p.toString().substring(start, start + len), false));
     return subQueries;
   }
   
   public static void main(String[] args) {
     Text t = new Text("BANANABANANA", true);
-    SuffixTreeWithCPD.Builder suffixTreeBuilder = new SuffixTreeWithCPD.Builder(t, 0);
+    SuffixTreeWithCPD.Builder suffixTreeBuilder = new SuffixTreeWithCPD.Builder(t, 2);
     SuffixTreeWithCPD st = suffixTreeBuilder.build();
     st.printTree();
     AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
@@ -132,7 +152,10 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
     Node n1 = st.root.follow(B).getToNode();
     Pair<Node, Integer> start = new Pair<Node, Integer>(n1, -4);
-    System.out.println(st.smartQuery(new Text("BANANA*A", false)));
+    for (Pair<Node, Integer> p: st.smartQuery(new Text("**NA", false))) {
+      st.printNode(p.getLeft());
+      System.out.println(p.getRight());
+    }
     //System.out.println(SuffixTreeWithCPD.breakQuery(new Text("***TEST*AGAIN**TEST*", false)));
     
   }
