@@ -10,8 +10,14 @@ import java.util.Map;
 import stringmatch.ds.util.Pair;
 import stringmatch.ds.yfasttrie.YFastTrie;
 
+/*
+ * Represents a path within the tree
+ */
 public class Path {
-  
+
+  // Invariants: order always consists of the keys of nodes. Once the y-fast trie is constructed,
+  // no further additions can be made to the path, and the y-fast trie will consist of all the
+  // keys in nodes.
   protected Map<Integer, Node> nodes;
   protected LinkedList<Integer> order;
   protected YFastTrie steps;
@@ -21,6 +27,9 @@ public class Path {
     order = new LinkedList<Integer>();
   }
   
+  /*
+   * Add a node to the end of the path. This node must be a child of the previous end node in the path.
+   */
   protected int addNode(Node node) {
     if (order.size() == 0) {
       nodes.put(node.maxHeight, node);
@@ -40,6 +49,10 @@ public class Path {
     }
   }
   
+  /*
+   * Add a node to the beginning of the path. This node must have the previous beginning of the path
+   * as a child.
+   */
   protected int prependNode(Node node) {
     if (order.size() == 0) {
       nodes.put(node.maxHeight, node);
@@ -68,6 +81,9 @@ public class Path {
     return sb.toString();
   }
   
+  /*
+   * Build the y-fast tree of the keys in nodes.
+   */
   public void buildYFastTrie() {
     List<Integer> keys = new ArrayList<Integer>();
     Iterator<Integer> i = order.descendingIterator();
@@ -78,10 +94,16 @@ public class Path {
     steps = builder.buildFromKeys(keys);
   }
   
+  // The length of the path is the max height of the first node
   public int getLength() {
     return order.peekFirst();
   }
   
+  /*
+   * Jump from starting position start in the path to position query. Return a pair. The first element
+   * is the node above (or equal to) the resulting position. The second element is the amount that the
+   * query position lies below the node.
+   */
   public Pair<Node, Integer> jump(int start, int query) {
     int goal = start + query;
     if (nodes.containsKey(goal)) {
@@ -89,8 +111,7 @@ public class Path {
     } else {
       Integer succ = steps.successor(goal);
       if (succ == null) {
-        return null;
-        // return the root, or maybe this means our ladders are wrong?
+        throw new RuntimeException("A jump query in a ladder exceeded the height of the ladder");
       } else {
         Node next = nodes.get(succ);
         int offset = succ - goal;
