@@ -28,13 +28,13 @@ public class SuffixTreeTest {
     
     SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(inputText);
     SuffixTree st = suffixTreeBuilder.build();
-    assertEquals("[A, $, NA, $, NA$, BANANA$, NA, $, NA$]", 
+    assertEquals("[$, A, $, NA, $, NA$, BANANA$, NA, $, NA$]", 
         st.getRoot().getEdgeStringsInDFS().toString());
-    assertEquals("[A, BANANA$, NA, $, NA, $, NA$, $, NA$]",
+    assertEquals("[$, A, BANANA$, NA, $, NA, $, NA$, $, NA$]",
         st.getRoot().getEdgeStringsInBFS().toString());
     
     List<String> allSuffixesAsStrings = st.getAllSuffixesAsStrings();
-    String[] trueSuffixes = new String[] { "A$", "NA$", "ANA$",
+    String[] trueSuffixes = new String[] { "$", "A$", "NA$", "ANA$",
         "NANA$", "ANANA$", "BANANA$" };
     assertEquals(trueSuffixes.length, allSuffixesAsStrings.size());
     for (String x : trueSuffixes) {
@@ -150,8 +150,7 @@ public class SuffixTreeTest {
     String s = t.toString();
     for (int i = 0; i < s.length(); i++) {
       String suffix = s.substring(i, s.length());
-      if (!suffix.equals("$"))
-        suffixes.add(suffix);
+      suffixes.add(suffix);
     }
     Collections.sort(suffixes);
     return suffixes;

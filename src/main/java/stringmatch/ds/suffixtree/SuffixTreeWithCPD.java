@@ -5,7 +5,6 @@ import java.util.List;
 
 import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
-import stringmatch.ds.text.TextSubstring;
 import stringmatch.ds.util.Pair;
 import stringmatch.ds.yfasttrie.YFastTrie;
 import stringmatch.ds.yfasttrie.cuckoohash.CuckooHashMap;
@@ -21,8 +20,43 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
   // Used or MA queries
   CuckooHashMap<Node, CuckooHashMap<Integer, Pair<Node, Integer>>> MATable;
   
-  // Y-Fast tries for leaf lexicographic indices.
+
+  // The depth of this wildcard subtree starting from the root of the original
+  // suffix tree S.
+  protected int subtreeDepth;
+  
+  // Mapping in the root suffix tree (S) from offset indices to lexicographic
+  // order.
+  protected CuckooHashMap<Integer, Integer> offsetToLexicographicIndexInS;
+  
+  // Y-Fast tries for leaf lexicographic indices (in T).
   YFastTrie<Node> leafLexicographicIndices;
+  
+  public SuffixTreeWithCPD(Node root) {
+    super(root);
+  }
+  
+  public SuffixTreeWithCPD(Builder builder) {
+    super(builder.root);
+  }
+  
+  // Determines and sets leafOffsetIndexInT and leafLexicographicIndexInT.
+  public void determineLeafValuesInSubtree() {
+    determineLeafValuesInSubtree(root);
+  }
+  
+  protected void determineLeafValuesInSubtree(Node node) {
+    if (node.isLeaf()) {
+      node.leafOffsetIndexInT = node.leafOffsetIndexInS + subtreeDepth;
+      node.leafLexicographicIndexInT = offsetToLexicographicIndexInS.
+          get(node.leafOffsetIndexInT);
+      return;
+    }
+    
+    for (Edge outgoingEdge : node.getOutgoingEdges()) {
+      determineLeafValuesInSubtree(outgoingEdge.getToNode());
+    }
+  }
   
   public void constructLeafLexicographicIndexYFT() {
     List<Pair<Integer, Node>> leaves = constructLeafIndexArray(root);
@@ -35,7 +69,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     List<Pair<Integer, Node>> leaves =
         new ArrayList<Pair<Integer, Node>>();
     if (node.isLeaf) {
-      leaves.add(new Pair<Integer, Node>(node.leafLexicographicIndex, node));
+      leaves.add(new Pair<Integer, Node>(node.leafLexicographicIndexInT, node));
       return leaves;
     }
     
@@ -430,14 +464,6 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     
   }
 
-  public SuffixTreeWithCPD(Node root) {
-    super(root);
-  }
-  
-  public SuffixTreeWithCPD(Builder builder) {
-    super(builder.root);
-  }
-  
   protected boolean checkMatch(Text p, int start, Edge e, int offset) {
     if (e != null) {
       for (int i = 0; i < Math.min(e.getTextSubstring().length - offset, p.getLength()
@@ -523,6 +549,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     return query(p);
   }
   
+  /*
   public Pair<Node, Integer> rootedLCP(Text p, Pair<Node, Integer> highestOverlapPoint, Text hos) {
     //Pair<Node, Integer> hop = highestOverlapPoint(p);
     //Text hos = constructHighestOverlap(hop);
@@ -535,7 +562,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       pIndex = i + 1;
     }
     return null;
-  }
+  }*/
   
   public Pair<Node, Integer> slowUnrootedLCP(Text p, Pair<Node, Integer> start) {
     Node node = start.getLeft();
@@ -596,7 +623,6 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     st.printNode(st.highestOverlapLeaf(p).getLeft());
     //st.rootedLCP(new Text("TEST", false));
     //System.out.println(SuffixTreeWithCPD.breakQuery(new Text("***TEST*AGAIN**TEST*", false)));
-    
   }
   
   public static class Builder extends SuffixTreeWithWildcards.Builder {
@@ -626,7 +652,8 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       }
     }
     
-    protected static void addWildcardSubtreesAt(Node node, int k) {   
+    protected static void addWildcardSubtreesAt(Node node, int k, int depthToNode,
+        CuckooHashMap<Integer, Integer> offsetToLexicographicIndexInS) {   
       if (node.isLeaf || k <= 0)
         return;
       
@@ -652,8 +679,11 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
           // input text.
           
           SuffixTreeWithCPD wildcardSubtree = new SuffixTreeWithCPD(nodeClone);
+          wildcardSubtree.offsetToLexicographicIndexInS = offsetToLexicographicIndexInS;
+          wildcardSubtree.subtreeDepth = depthToNode + 1; // +1 for the wildcard edge.
           nodeClone = turnIntoWildcardSubtree(wildcardSubtree);
           wildcardSubtree.constructLCAAndMA();
+          wildcardSubtree.determineLeafValuesInSubtree();
           wildcardSubtree.constructLeafLexicographicIndexYFT();
       
           // Attach nodeClone onto node. nodeClone should have just one outgoing
@@ -672,13 +702,37 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       for (Edge edge : node.outgoingEdges) {
         // Recursively add them to the new wildcard subtree as well.
         int newK = edge.isWildcardEdge() ? k - 1 : k;
-        addWildcardSubtreesAt(edge.getToNode(), newK);
+        int edgeDepth = edge.getTextSubstring().getLength();
+        addWildcardSubtreesAt(edge.getToNode(), newK, depthToNode + edgeDepth,
+            offsetToLexicographicIndexInS);
+      }
+    }
+    
+    protected CuckooHashMap<Integer, Integer>
+        constructOffsetToLexicographicIndexMap() {
+      CuckooHashMap<Integer, Integer> map = new CuckooHashMap<Integer, Integer>();
+      constructOffsetToLexicographicIndexMap(root, map);
+      return map;
+    }
+    
+    protected void constructOffsetToLexicographicIndexMap(
+        Node node, CuckooHashMap<Integer, Integer> map) {
+      if (node.isLeaf()) {
+        map.put(node.leafOffsetIndexInS, node.leafLexicographicIndexInS);
+        return;
+      }
+      
+      for (Edge outgoingEdge : node.getOutgoingEdges()) {
+        constructOffsetToLexicographicIndexMap(outgoingEdge.getToNode(), map);
       }
     }
     
     public SuffixTreeWithCPD build() {
       SuffixTreeWithCPD stcpd = new SuffixTreeWithCPD(this);
+      stcpd.offsetToLexicographicIndexInS = constructOffsetToLexicographicIndexMap();
+      stcpd.subtreeDepth = 0;
       stcpd.constructLCAAndMA();
+      stcpd.determineLeafValuesInSubtree();
       stcpd.constructLeafLexicographicIndexYFT();
       
       // Find the centroid paths in the original suffix tree (i.e., the one
@@ -687,7 +741,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       findCentroidPaths(root);
       
       // Add wildcards (without including centroid edges).
-      addWildcardSubtreesAt(root, k);
+      addWildcardSubtreesAt(root, k, 0, stcpd.offsetToLexicographicIndexInS);
       
       return stcpd;
     }

@@ -99,7 +99,7 @@ public class SuffixTreeNaiveBigSpace extends SuffixTreeWithWildcards {
         SuffixTreeWithWildcards wildcardSubtree
             = new SuffixTreeNaiveBigSpace(nodeClone);
         nodeClone = turnIntoWildcardSubtree(wildcardSubtree);
-      
+
         // Attach nodeClone onto node. nodeClone should have just one outgoing
         // edge: the wildcard edge.
         Edge wildcardEdge = nodeClone.outgoingEdges.get(0);

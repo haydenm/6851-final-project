@@ -2,23 +2,15 @@ package stringmatch.ds.suffixtree;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
-import stringmatch.ds.text.TextSubstring;
-import stringmatch.ds.util.Pair;
-import stringmatch.ds.yfasttrie.cuckoohash.CuckooHashMap;
-import stringmatch.ds.yfasttrie.YFastTrie;
-import stringmatch.ds.yfasttrie.YFastTrie.Builder;
-
 
 public abstract class SuffixTreeWithWildcards extends SuffixTree {
   
-  protected int k; // The number of wildcards.  // Used for LCA queries
+  protected int k; // The number of wildcards.
   
   public SuffixTreeWithWildcards(Node root) {
     super(root);
@@ -27,7 +19,7 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
   public SuffixTreeWithWildcards(Builder builder) {
     super(builder.root);
   }
-
+  
   public abstract static class Builder extends SuffixTree.Builder {
 
     protected int k; // The number of wildcards.
@@ -74,7 +66,8 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
           node.outgoingEdges.get(0).getTextSubstring().getFirstChar().equals(
               AlphabetCharacter.END_CHAR)) {
         node.isLeaf = true;
-        node.leafOffsetIndex = node.outgoingEdges.get(0).getToNode().leafOffsetIndex;
+        node.leafOffsetIndexInS = node.outgoingEdges.get(0).getToNode().leafOffsetIndexInS;
+        node.leafLexicographicIndexInS = node.outgoingEdges.get(0).getToNode().leafLexicographicIndexInS;
         node.outgoingEdges.clear();
         return newRoot;
       }
