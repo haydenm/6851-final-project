@@ -162,7 +162,7 @@ public class SuffixTree {
 
   public static void main(String[] args) {
     SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(new Text(
-        "BANANABANANABANANABANANA", true));
+        "BANANA", true));
     SuffixTree st = suffixTreeBuilder.build();
     st.printTree();
     //System.out.println(st.eulerTour(0, st.root));
@@ -171,7 +171,9 @@ public class SuffixTree {
     AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
     AlphabetCharacter D = new AlphabetCharacter(new Character('$'));
     Node n1 = st.root.follow(B).getToNode();
-    Node n2 = st.root.follow(A).getToNode().follow(N).getToNode().follow(N).getToNode().follow(B).getToNode().follow(B).getToNode().follow(B).getToNode();
+    //Node n2 = st.root.follow(A).getToNode().follow(N).getToNode().follow(N).getToNode().follow(B).getToNode().follow(B).getToNode().follow(B).getToNode();
+    Text t = new Text("ANAF", false);
+    //Pair<Node, Integer> p = st.highestOverlapPoint(new TextSubstring(t, 0, t.getSize()));
     //System.out.println(st.LCA(n1, n2));
     //System.out.println(st.root.maxHeight);
     //System.out.println(st.MA(n2, 0));

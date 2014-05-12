@@ -36,6 +36,49 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
   }
   
   /*
+   * Get the number of characters for which an edge and a TextSubstring (starting at start) match
+   */
+  private Integer lengthOfMatch(TextSubstring p, int start, Edge e) {
+    if (e != null) {
+      for (int i = 0; i < Math.min(e.getTextSubstring().length, p.getLength() - start); i++) {
+        AlphabetCharacter nextOnEdge = e.getTextSubstring().getIthChar(i);
+        AlphabetCharacter nextInPattern = p.getIthChar(i + start);
+        if (!nextOnEdge.equals(nextInPattern)) {
+          return i;
+        }
+      }
+      return Math.min(e.getTextSubstring().length, p.getLength() - start);
+    }
+    return 0;
+  }
+  
+  /*
+   * Find the point with the most overlap with p. This is represented as a pair, where
+   * the first element is the closest node and the second is the number of letters below the
+   * node which match.
+   */
+  protected Pair<Node, Integer> highestOverlapPoint(TextSubstring p) {
+    return highestOverlapPoint(p, 0, root);
+  }
+  
+  private Pair<Node, Integer> highestOverlapPoint(TextSubstring p, int start, Node current) {
+    if (start >= p.getLength()) {
+      return new Pair<Node, Integer>(current, start - p.getLength());
+    }
+    Edge e = current.follow(p.getIthChar(start));
+    int length = lengthOfMatch(p, start, e);
+    if (e != null) {
+      if (length == e.getLength()) {
+        return highestOverlapPoint(p, start + e.getTextSubstring().length, e.getToNode());
+      } else {
+        return new Pair<Node, Integer>(e.getToNode(), length - e.getLength());
+      }
+    } else {
+      return new Pair<Node, Integer>(current, 0);
+    }
+  }
+  
+  /*
    * Perform an euler tour on the tree, recording the depth of each node. This is
    * used for LCA.
    */
