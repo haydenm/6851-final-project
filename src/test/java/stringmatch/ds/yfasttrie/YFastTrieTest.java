@@ -72,4 +72,64 @@ public class YFastTrieTest {
     }
   }
   
+  @Test
+  public void testOneElement() {
+    YFastTrie.Builder<Object> yftBuilder = new YFastTrie.Builder<Object>();
+    List<Pair<Integer, Object>> pairs = new ArrayList<Pair<Integer, Object>>();
+    pairs.add(new Pair<Integer, Object>(2, new Object()));
+    YFastTrie<Object> yft1 = yftBuilder.buildFromPairs(pairs);
+    assertTrue(yft1.hasKey(2));
+    assertFalse(yft1.hasKey(0));
+    assertEquals(null, yft1.predecessor(2));
+    assertEquals(null, yft1.successor(2));
+    assertEquals(null, yft1.predecessor(1));
+    assertEquals(2, yft1.predecessor(3).getLeft().intValue());
+    assertEquals(2, yft1.successor(0).getLeft().intValue());
+  }
+  
+  @Test
+  public void testTwoElements() {
+    YFastTrie.Builder<Object> yftBuilder = new YFastTrie.Builder<Object>();
+    List<Pair<Integer, Object>> pairs = new ArrayList<Pair<Integer, Object>>();
+    pairs.add(new Pair<Integer, Object>(2, new Object()));
+    pairs.add(new Pair<Integer, Object>(4, new Object()));
+    YFastTrie<Object> yft1 = yftBuilder.buildFromPairs(pairs);
+    assertTrue(yft1.hasKey(2));
+    assertFalse(yft1.hasKey(0));
+    assertTrue(yft1.hasKey(4));
+    assertEquals(null, yft1.predecessor(2));
+    assertEquals(4, yft1.successor(2).getLeft().intValue());
+    assertEquals(null, yft1.predecessor(1));
+    assertEquals(2, yft1.predecessor(3).getLeft().intValue());
+    assertEquals(2, yft1.successor(0).getLeft().intValue());
+    assertEquals(4, yft1.predecessor(6).getLeft().intValue());
+    assertEquals(4, yft1.successor(3).getLeft().intValue());
+    assertEquals(null, yft1.successor(4));
+  }
+  
+  @Test
+  public void testThreeElements() {
+    YFastTrie.Builder<Object> yftBuilder = new YFastTrie.Builder<Object>();
+    List<Pair<Integer, Object>> pairs = new ArrayList<Pair<Integer, Object>>();
+    pairs.add(new Pair<Integer, Object>(2, new Object()));
+    pairs.add(new Pair<Integer, Object>(4, new Object()));
+    pairs.add(new Pair<Integer, Object>(100, new Object()));
+    YFastTrie<Object> yft1 = yftBuilder.buildFromPairs(pairs);
+    assertTrue(yft1.hasKey(2));
+    assertFalse(yft1.hasKey(0));
+    assertTrue(yft1.hasKey(4));
+    assertTrue(yft1.hasKey(100));
+    assertFalse(yft1.hasKey(50));
+    assertEquals(null, yft1.predecessor(2));
+    assertEquals(4, yft1.successor(2).getLeft().intValue());
+    assertEquals(null, yft1.predecessor(1));
+    assertEquals(2, yft1.predecessor(3).getLeft().intValue());
+    assertEquals(2, yft1.successor(0).getLeft().intValue());
+    assertEquals(4, yft1.predecessor(6).getLeft().intValue());
+    assertEquals(4, yft1.successor(3).getLeft().intValue());
+    assertEquals(100, yft1.successor(4).getLeft().intValue());
+    assertEquals(100, yft1.successor(50).getLeft().intValue());
+    assertEquals(100, yft1.predecessor(200).getLeft().intValue());
+  }
+  
 }
