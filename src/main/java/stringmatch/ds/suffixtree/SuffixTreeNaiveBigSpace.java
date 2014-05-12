@@ -5,6 +5,7 @@ import java.util.List;
 
 import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
+import stringmatch.ds.util.Pair;
 
 public class SuffixTreeNaiveBigSpace extends SuffixTreeWithWildcards {
   
@@ -20,7 +21,7 @@ public class SuffixTreeNaiveBigSpace extends SuffixTreeWithWildcards {
    * Returns the indices of all the matches for the query pattern p.
    */
   public List<Integer> queryForIndices(Text p) {
-    Node node = query(p);
+    Node node = query(p).getLeft();
     if (node == null)
       return new ArrayList<Integer>();
     else
@@ -30,15 +31,15 @@ public class SuffixTreeNaiveBigSpace extends SuffixTreeWithWildcards {
   /*
    * Returns node rooting the matches.
    */
-  public Node query(Text p) {
+  public Pair<Node, Integer> query(Text p) {
     return query(p, 0, root);
   }
   
-  private Node query(Text p, int pStart, Node current) {
+  protected Pair<Node, Integer> query(Text p, int pStart, Node current) {
     if (pStart >= p.getLength()) {
       // We're done reading through the pattern, so return the node where
       // we are. Everything under it is a match.
-      return current;
+      return new Pair<Node, Integer>(current, p.getLength() - pStart);
     }
     
     if (current.isLeaf()) {
@@ -98,9 +99,7 @@ public class SuffixTreeNaiveBigSpace extends SuffixTreeWithWildcards {
         SuffixTreeWithWildcards wildcardSubtree
             = new SuffixTreeNaiveBigSpace(nodeClone);
         nodeClone = turnIntoWildcardSubtree(wildcardSubtree);
-        
-        wildcardSubtree.constructLCAAndMA();
-        
+
         // Attach nodeClone onto node. nodeClone should have just one outgoing
         // edge: the wildcard edge.
         Edge wildcardEdge = nodeClone.outgoingEdges.get(0);
@@ -118,7 +117,6 @@ public class SuffixTreeNaiveBigSpace extends SuffixTreeWithWildcards {
     
     public SuffixTreeNaiveBigSpace build() {
       SuffixTreeNaiveBigSpace stnbs = new SuffixTreeNaiveBigSpace(this);
-      stnbs.constructLCAAndMA();
       
       addWildcardSubtreesAt(root, k);
       

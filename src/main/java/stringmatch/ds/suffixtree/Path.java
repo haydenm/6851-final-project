@@ -31,9 +31,6 @@ public class Path {
    * Add a node to the end of the path. This node must be a child of the previous end node in the path.
    */
   protected int addNode(Node node) {
-    //System.out.println(nodes);
-    //System.out.println(order);
-    //System.out.println(node);
     if (order.size() == 0) {
       nodes.put(node.maxHeight, node);
       order.addLast(node.maxHeight);
@@ -41,8 +38,6 @@ public class Path {
     } else {
       int lastHeight = order.peekLast();
       Node last = nodes.get(lastHeight);
-      //System.out.println(node.incomingEdge.getFromNode());
-      //System.out.println(last);
       if (node.incomingEdge.getFromNode() == last) {
         int height = lastHeight - node.incomingEdge.getLength();
         nodes.put(height, node);
@@ -97,7 +92,6 @@ public class Path {
       keys.add(new Pair<Integer, Object>(i.next(), o));
     }
     YFastTrie.Builder<Object> builder = new YFastTrie.Builder<Object>();
-    //System.out.println(keys);
     steps = builder.buildFromPairs(keys);
   }
   
@@ -116,7 +110,8 @@ public class Path {
     if (nodes.containsKey(goal)) {
       return new Pair<Node, Integer>(nodes.get(goal), 0);
     } else {
-      Integer succ = steps.successor(goal).getLeft();
+      Pair<Integer, Object> s = steps.successor(goal);
+      Integer succ = s.getLeft();
       if (succ == null) {
         throw new RuntimeException("A jump query in a ladder exceeded the height of the ladder");
       } else {

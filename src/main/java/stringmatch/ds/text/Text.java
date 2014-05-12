@@ -96,4 +96,8 @@ public class Text {
     }
   }
   
+  public int compareTo(Text other) {
+    return this.toString().compareTo(other.toString());
+  }
+  
 }

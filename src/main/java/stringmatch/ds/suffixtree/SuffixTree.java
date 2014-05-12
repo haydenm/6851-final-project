@@ -56,6 +56,17 @@ public class SuffixTree {
     }
     return allSuffixesAsStrings;
   }
+  
+  public void printNode(Node node) {
+    String s = "";
+    Edge e = node.incomingEdge;
+    while (e != null) {
+      s = e.toString() + s;
+      Node n = e.getFromNode();
+      e = n.incomingEdge;
+    }
+    System.out.println(s);
+  }
     
   /* 
    * Checks that following an edge matches all the characters along the edge. If allowWildcards
@@ -83,13 +94,13 @@ public class SuffixTree {
    * Returns the node corresponding to the longest common prefix of p with the
    * suffix tree, or null if there is no such prefix. No wildcards allowed.
    */
-  public Node query(Text p) {
+  public Pair<Node, Integer> query(Text p) {
     return query(p, 0, root);
   }
 
-  private Node query(Text p, int start, Node current) {
+  protected Pair<Node, Integer> query(Text p, int start, Node current) {
     if (start >= p.getSize()) {
-      return current;
+      return new Pair<Node, Integer>(current, p.getSize() - start);
     }
     Edge e = current.follow(p.getCharAtIndex(start));
     if (checkMatch(p, start, e, false)) {
@@ -101,6 +112,14 @@ public class SuffixTree {
   public boolean wildcardMatch(AlphabetCharacter nextOnEdge,
       AlphabetCharacter nextInPattern) {
     return (nextInPattern.isWild() && !nextOnEdge.isEnd());
+  }
+  
+  public static void main(String[] args) {
+    Text t = new Text("BANANABANANA", true);
+    SuffixTree.Builder suffixTreeBuilder = new SuffixTree.Builder(t);
+    SuffixTree st = suffixTreeBuilder.build();
+    st.printTree();
+    System.out.println(st.query(new Text("ANABA", false), 1, st.root));
   }
 
   /*

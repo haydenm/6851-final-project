@@ -25,7 +25,11 @@ public class TextSubstring implements Comparable<TextSubstring> {
   }
   
   public String toString() {
-	  return getSubstringAsText().toString();
+    if (length == 0) {
+      return "";
+    } else {
+      return getSubstringAsText().toString();
+    }
   }
   
   public Text getSubstringAsText() {
