@@ -118,13 +118,51 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     }
   }
   
+  protected Node highestOverlapLeaf(Text p) {
+    Pair<Node, Integer> hop = highestOverlapPoint(p);
+    Text overlap = constructHighestOverlap(hop);
+    System.out.println(overlap);
+    int h = overlap.getLength();
+    Edge e = hop.getLeft().incomingEdge;
+    AlphabetCharacter nextOnEdge = e.getCharAt(e.getLength() + hop.getRight());
+    System.out.println("H");
+    System.out.println(h);
+    if (hop.getRight() == 0 && h == p.getLength()) {
+      System.out.println("Diverged at a node");
+      // End of pattern came at node
+      return hop.getLeft().leftMost;
+    }
+    if (hop.getRight() != 0 && h == p.getLength()) {
+      System.out.println("OTHER CASE");
+    }
+    if (hop.getRight() == 0 && p.getLength() > h) {
+      // Diverged from a node
+      return hop.getLeft().followPrevious(p.getCharAtIndex(h)).getToNode().rightMost;
+    }
+    if (hop.getRight() != 0 && p.getLength() > h) {
+      // Diverged along an edge
+      System.out.println("Diverged along an edge");
+      AlphabetCharacter nextInPattern = p.getCharAtIndex(h);
+      System.out.println(nextInPattern);
+      if (nextInPattern.compareTo(nextOnEdge) > 0) {
+        System.out.println(hop.getLeft());
+        return hop.getLeft().rightMost;
+      } else if (nextInPattern.compareTo(nextOnEdge) < 0) {
+        return hop.getLeft().leftMost;
+      } else {
+        throw new RuntimeException("Something wrong with highest overlap leaf");
+      }
+    } else {
+      System.out.println("END OF PATTERN");
+    }
+    return null;
+  }
+  
   protected Text constructHighestOverlap(Pair<Node, Integer> highestOverlapPoint) {
     List<String> strs = new ArrayList<String>();
     Node current = highestOverlapPoint.getLeft();
     Edge e = current.incomingEdge;
-    if (highestOverlapPoint.getRight() != 0) {
-      strs.add(e.toString().substring(0, e.getLength() + highestOverlapPoint.getRight()));
-    }
+    strs.add(e.toString().substring(0, e.getLength() + highestOverlapPoint.getRight()));
     while (e != null) {
       current = e.getFromNode();
       e = current.incomingEdge;
@@ -548,6 +586,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
     AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
     AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
+    AlphabetCharacter D = new AlphabetCharacter(new Character('A'));
     Node n1 = st.root.follow(B).getToNode();
     Pair<Node, Integer> start = new Pair<Node, Integer>(n1, -4);
     for (Pair<Node, Integer> p: st.smartQuery(new Text("A", false))) {
@@ -556,6 +595,11 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     }
     System.out.println("TESTA".compareTo("TEST$"));
     System.out.println(n1.followLeft());
+    Text p = new Text("BANANAD", false);
+    Pair<Node, Integer> hop = st.highestOverlapPoint(p);
+    System.out.println(hop);
+    System.out.println(st.highestOverlapLeaf(p));
+    System.out.println(st.root.followPrevious(A));
     //st.rootedLCP(new Text("TEST", false));
     //System.out.println(SuffixTreeWithCPD.breakQuery(new Text("***TEST*AGAIN**TEST*", false)));
     

@@ -107,6 +107,22 @@ public class Node {
 	  return null;
   }
   
+  protected Edge followPrevious(AlphabetCharacter c) {
+    if (outgoingEdges.size() > 0) {
+      Edge prev = outgoingEdges.get(0);
+      AlphabetCharacter first = prev.getCharAt(0);
+      for (Edge e: outgoingEdges) {
+        AlphabetCharacter next = e.getCharAt(0);
+        if (first.compareTo(next) < 0 && c.compareTo(next) > 0 && !e.isWildcardEdge()) {
+          prev = e;
+          first = next;
+        }
+      }
+      return prev;
+    }
+    return null;
+  }
+  
   protected Edge followLeft() {
     if (outgoingEdges.size() > 0) {
       Edge left = outgoingEdges.get(0);
