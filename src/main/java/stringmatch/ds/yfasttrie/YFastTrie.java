@@ -1,21 +1,25 @@
 package stringmatch.ds.yfasttrie;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.TreeSet;
+import java.util.Map;
+import java.util.TreeMap;
 
+import stringmatch.ds.util.Pair;
 import stringmatch.ds.yfasttrie.cuckoohash.CuckooHashMap;
 
-public class YFastTrie {
+public class YFastTrie<T> {
 
   protected XFastTrie xft;
-  protected CuckooHashMap<Integer, TreeSet<Integer>> bbsts;
+  protected CuckooHashMap<Integer, TreeMap<Integer, T>> bbsts;
   
   protected int universeSize;
   protected int bbstSize;
   protected int numBBSTs;
   
-  protected YFastTrie(Builder builder) {
+  protected YFastTrie(Builder<T> builder) {
     xft = builder.xft;
     bbsts = builder.bbsts;
     universeSize = builder.universeSize;
@@ -38,16 +42,16 @@ public class YFastTrie {
     Integer repSuccessor = xft.successor(key);
     
     if (repPredecessor == null)
-      return bbsts.get(repSuccessor).contains(key);
+      return bbsts.get(repSuccessor).containsKey(key);
     if (repSuccessor == null)
-      return bbsts.get(repPredecessor).contains(key);
+      return bbsts.get(repPredecessor).containsKey(key);
     
-    return bbsts.get(repSuccessor).contains(key) ||
-        bbsts.get(repPredecessor).contains(key);
+    return bbsts.get(repSuccessor).containsKey(key) ||
+        bbsts.get(repPredecessor).containsKey(key);
   }
   
   // Returns the predecessor if it exists, or else null.
-  public Integer predecessor(int key) {
+  public Pair<Integer, T> predecessor(int key) {
     // TODO: See hasKey(..) TODO.
     Integer repPredecessor = xft.predecessor(key);
     Integer repSuccessor;
@@ -57,19 +61,20 @@ public class YFastTrie {
       repSuccessor = xft.successor(key);
     
     if (repPredecessor == null)
-      return bbsts.get(repSuccessor).lower(key);
+      return pairFromEntry(bbsts.get(repSuccessor).lowerEntry(key));
     if (repSuccessor == null)
-      return bbsts.get(repPredecessor).lower(key);
+      return pairFromEntry(bbsts.get(repPredecessor).lowerEntry(key));
     
-    Integer repSuccessorPred = bbsts.get(repSuccessor).lower(key);
+    Pair<Integer, T> repSuccessorPred = 
+        pairFromEntry(bbsts.get(repSuccessor).lowerEntry(key));
     if (repSuccessorPred != null)
       return repSuccessorPred;
     else
-      return bbsts.get(repPredecessor).lower(key);
+      return pairFromEntry(bbsts.get(repPredecessor).lowerEntry(key));
   }
   
   // Returns the successor if it exists, or else null.
-  public Integer successor(int key) {
+  public Pair<Integer, T> successor(int key) {
     // TODO: See hasKey(..) TODO.
     Integer repSuccessor = xft.successor(key);
     Integer repPredecessor;
@@ -79,21 +84,28 @@ public class YFastTrie {
       repPredecessor = xft.predecessor(key);
     
     if (repPredecessor == null)
-      return bbsts.get(repSuccessor).higher(key);
+      return pairFromEntry(bbsts.get(repSuccessor).higherEntry(key));
     if (repSuccessor == null)
-      return bbsts.get(repPredecessor).higher(key);
+      return pairFromEntry(bbsts.get(repPredecessor).higherEntry(key));
     
-    Integer repPrecessorSuc = bbsts.get(repPredecessor).higher(key);
+    Pair<Integer, T> repPrecessorSuc =
+        pairFromEntry(bbsts.get(repPredecessor).higherEntry(key));
     if (repPrecessorSuc != null)
       return repPrecessorSuc;
     else
-      return bbsts.get(repSuccessor).higher(key);
+      return pairFromEntry(bbsts.get(repSuccessor).higherEntry(key));
   }
   
-  public static class Builder {
+  protected Pair<Integer, T> pairFromEntry(Map.Entry<Integer, T> entry) {
+    if (entry == null)
+      return null;
+    return new Pair<Integer, T>(entry.getKey(), entry.getValue());
+  }
+  
+  public static class Builder<T> {
     
     protected XFastTrie xft;
-    protected CuckooHashMap<Integer, TreeSet<Integer>> bbsts;
+    protected CuckooHashMap<Integer, TreeMap<Integer, T>> bbsts;
     
     protected int universeSize;
     protected int bbstSize;
@@ -107,13 +119,38 @@ public class YFastTrie {
       numBBSTs = 0;
     }
     
-    public YFastTrie buildFromKeys(List<Integer> keys) {
-      XFastTrie.Builder.processInputKeys(keys);
+    protected void processInputKeys(List<Pair<Integer, T>> keys) {
+      if (keys.size() == 0)
+        throw new IllegalArgumentException("Can't make a trie out of nothing.");
+      
+      boolean isSorted = true;
+      for (int i = 1; i < keys.size(); i++) {
+        if (keys.get(i).getLeft() < keys.get(i - 1).getLeft()) {
+          isSorted = false;
+          break;
+        }
+      }
+      if (!isSorted) {
+        Collections.sort(keys, new Comparator<Pair<Integer, T>>() {
+          public int compare(Pair<Integer, T> p1, Pair<Integer, T> p2) {
+            return p1.getLeft().compareTo(p2.getLeft());
+          }
+        });
+      }
+      for (int i = 1; i < keys.size(); i++) {
+        if (keys.get(i).getLeft() == keys.get(i - 1).getLeft()) {
+          throw new IllegalArgumentException("Keys must be distinct.");
+        }
+      }
+    }
+    
+    public YFastTrie<T> buildFromPairs(List<Pair<Integer, T>> keys) {
+      processInputKeys(keys);
       
       int numKeys = keys.size();
       int maxKey = 0;
       for (int i = 0; i < numKeys; i++) {
-        if (keys.get(i) > maxKey) maxKey = keys.get(i);
+        if (keys.get(i).getLeft() > maxKey) maxKey = keys.get(i).getLeft();
       }
       universeSize = maxKey + 1;
       
@@ -122,29 +159,29 @@ public class YFastTrie {
         bbstSize++;
       numBBSTs = (int) Math.ceil(numKeys / bbstSize);
       
-      bbsts = new CuckooHashMap<Integer, TreeSet<Integer>>();
+      bbsts = new CuckooHashMap<Integer, TreeMap<Integer, T>>();
       
       List<Integer> bbstRepresentatives = new ArrayList<Integer>(numBBSTs);
       
-      TreeSet<Integer> currentBBST = new TreeSet<Integer>();
+      TreeMap<Integer, T> currentBBST = new TreeMap<Integer, T>();
       for (int i = 0; i < numKeys; i++) {
         if (currentBBST.size() == bbstSize) {
           // Find a representative element, which can be the key inserted
           // bbstSize/2 iterations ago.
-          int rep = keys.get(i - bbstSize/2);
+          int rep = keys.get(i - bbstSize/2).getLeft();
           
           // Store the BBST and start with a new one.
           bbsts.put(rep, currentBBST);
           bbstRepresentatives.add(rep);
-          currentBBST = new TreeSet<Integer>();
+          currentBBST = new TreeMap<Integer, T>();
         }
         
-        currentBBST.add(keys.get(i));
+        currentBBST.put(keys.get(i).getLeft(), keys.get(i).getRight());
       }
       if (currentBBST.size() > 0) {
         // Find a representative element, which can be the key inserted
         // currentBBST.size()/2 iterations before the end.
-        int rep = keys.get(numKeys - 1 - currentBBST.size()/2);
+        int rep = keys.get(numKeys - 1 - currentBBST.size()/2).getLeft();
         
         // Store the BBST and start with a new one.
         bbsts.put(rep, currentBBST);
@@ -155,7 +192,7 @@ public class YFastTrie {
       XFastTrie.Builder xftBuilder = new XFastTrie.Builder();
       xft = xftBuilder.buildFromKeys(bbstRepresentatives);
       
-      return new YFastTrie(this);
+      return new YFastTrie<T>(this);
     }
     
   }
