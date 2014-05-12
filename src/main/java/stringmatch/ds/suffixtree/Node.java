@@ -22,11 +22,33 @@ public class Node {
   
   protected Edge centroidEdge;
   protected boolean isLeaf;
-  protected int leafOffsetIndex;
   
-  // Stores where the leaf falls in lexicographic order, but
-  // stores the value DOUBLED.
-  protected int leafLexicographicIndex;
+  // Stores where the leaf falls in the input string. For *all* leaves
+  // (including those in wildcard subtrees), this accounts for the entire
+  // path from the root of the original suffix tree S down to the leaf.
+  // (That is, it is not simply the offset of the string from the root
+  // of the wildcard subtree down to the leaf. It is the offset of the
+  // string from the root of S down to the leaf.)
+  protected int leafOffsetIndexInS;
+  
+  // Stores where the leaf falls in the input string based on the
+  // string from the root of the wildcard subtree containing this
+  // leaf down to the leaf. Note that this value is simply the
+  // depth of the wildcard subtree containing this leaf plus
+  // leafOffsetIndexInS.
+  protected int leafOffsetIndexInT;
+  
+  // Stores where the leaf falls in lexicographic order, where the
+  // leaf's string is considered from the root of the original suffix
+  // tree S down to the leaf.
+  // The value is DOUBLED from what it would normally be.
+  protected int leafLexicographicIndexInS;
+  
+  // Stores where the leaf falls in lexicographic order in the input string
+  // based on the string from the root of the wildcard subtree containing this leaf
+  // down to the leaf.
+  // The value is DOUBLED from what it would normally be.
+  protected int leafLexicographicIndexInT;
   
   protected int LCAIndex;
   protected int maxHeight;
@@ -44,18 +66,22 @@ public class Node {
     numLeaves = -1;
     centroidEdge = null;
     isLeaf = false;
-    leafOffsetIndex = -1;
-    leafLexicographicIndex = -1;
+    leafOffsetIndexInS = -1;
+    leafOffsetIndexInT = -1;
+    leafLexicographicIndexInS = -1;
+    leafLexicographicIndexInT = -1;
     LCAIndex = -1;
     maxHeight = -1;
   }
   
-  protected Node(Edge incomingEdge, boolean isLeaf, int leafOffsetIndex,
-      int leafLexicographicIndex) {
+  protected Node(Edge incomingEdge, boolean isLeaf, int leafOffsetIndexInS,
+      int leafLexicographicIndexInS) {
     this(incomingEdge);
     this.isLeaf = isLeaf;
-    this.leafOffsetIndex = leafOffsetIndex;
-    this.leafLexicographicIndex = leafLexicographicIndex;
+    this.leafOffsetIndexInS = leafOffsetIndexInS;
+    this.leafLexicographicIndexInS = leafLexicographicIndexInS;
+    leafOffsetIndexInT = -1;
+    leafLexicographicIndexInT = -1;
     LCAIndex = -1;
     maxHeight = -1;
   }
@@ -247,14 +273,15 @@ public class Node {
   }
   
   /*
-   * Returns a list of the leafOffsetIndex (i.e., the positions of the leaves in the
-   * input text) for all the leaves in the subtree rooted at this.
+   * Returns a list of the leafOffsetIndexInS (i.e., the positions of the leaves in the
+   * input text) for all the leaves in the subtree rooted at this, based on the
+   * strings considered from the root of the suffix tree S down to the leaf.
    */
   protected List<Integer> getOffsetIndicesOfLeaves() {
     List<Integer> indices = new ArrayList<Integer>();
     
     if (isLeaf()) {
-      indices.add(leafOffsetIndex);
+      indices.add(leafOffsetIndexInS);
       return indices;
     }
     
@@ -317,8 +344,8 @@ public class Node {
           }
           if (newChildNode.outgoingEdges.size() == 0) {
             newChildNode.isLeaf = true;
-            newChildNode.leafOffsetIndex = edge.getToNode().leafOffsetIndex;
-            newChildNode.leafLexicographicIndex = edge.getToNode().leafLexicographicIndex;
+            newChildNode.leafOffsetIndexInS = edge.getToNode().leafOffsetIndexInS;
+            newChildNode.leafLexicographicIndexInS = edge.getToNode().leafLexicographicIndexInS;
           }
           mergedNode.addOutgoingEdge(newChildEdge);
           newChildEdge.setToNode(newChildNode);
@@ -349,8 +376,8 @@ public class Node {
           }
           if (newChildNode.outgoingEdges.size() == 0) {
             newChildNode.isLeaf = true;
-            newChildNode.leafOffsetIndex = matchingEdge.getToNode().leafOffsetIndex;
-            newChildNode.leafLexicographicIndex = matchingEdge.getToNode().leafLexicographicIndex;
+            newChildNode.leafOffsetIndexInS = matchingEdge.getToNode().leafOffsetIndexInS;
+            newChildNode.leafLexicographicIndexInS = matchingEdge.getToNode().leafLexicographicIndexInS;
           }
           mergedNode.addOutgoingEdge(newChildEdge);
           newChildEdge.setToNode(newChildNode);
@@ -377,31 +404,6 @@ public class Node {
     }
   }
   
-  protected Node getShallowCopyWithoutCentroidEdge() {
-    if (centroidEdge == null)
-      throw new IllegalArgumentException();
-    
-    Node copy = new Node(incomingEdge, isLeaf, leafOffsetIndex,
-        leafLexicographicIndex);
-    copy.numLeaves = numLeaves - centroidEdge.getToNode().numLeaves;
-    
-    List<Edge> outgoingEdgesCopy = new ArrayList<Edge>(outgoingEdges.size() - 1);
-    Edge newCentroidEdge = null;
-    int maxNumLeaves = 0;
-    for (Edge outgoingEdge : outgoingEdges) {
-      if (outgoingEdge != centroidEdge) {
-        outgoingEdgesCopy.add(outgoingEdge);
-        if (outgoingEdge.getToNode().numLeaves >= maxNumLeaves) {
-          maxNumLeaves = outgoingEdge.getToNode().numLeaves;
-          newCentroidEdge = outgoingEdge;
-        }
-      }
-    }
-    copy.centroidEdge = newCentroidEdge;
-    
-    return copy;
-  }
-  
   protected Node clone() {
     return clone(false, null);
   }
@@ -410,8 +412,8 @@ public class Node {
    * Makes a deep clone of the tree rooted at this.
    */
   protected Node clone(boolean removeCentroidEdge, Edge incomingEdge) {
-    Node copy = new Node(incomingEdge, isLeaf, leafOffsetIndex,
-        leafLexicographicIndex);
+    Node copy = new Node(incomingEdge, isLeaf, leafOffsetIndexInS,
+        leafLexicographicIndexInS);
     
     copy.numLeaves = numLeaves;
     if (removeCentroidEdge && centroidEdge != null)

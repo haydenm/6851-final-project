@@ -16,8 +16,7 @@ public class SuffixTreeWithWildcardsTest {
     for (String suffix : SuffixTreeTest.generateAllSuffixesOfText(t)) {
       suffixes.add(suffix);
       for (int j = 1; j <= k; j++) {
-        // Find all subsets of k indices between 0 and the '$' at the end (but not
-        // including the '$').
+        // Find all subsets of k indices between 0 and the '$' at the end.
         Set<Set<Integer>> setOfIndicesToReplace = makeAllSubsets(0, suffix.length() - 2, j);
         for (Set<Integer> indicesToReplace : setOfIndicesToReplace) {
           StringBuilder suffixSB = new StringBuilder(suffix);
