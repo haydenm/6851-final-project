@@ -93,6 +93,9 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     }
     
     public SuffixTreeWithCPD build() {
+      SuffixTreeWithCPD stcpd = new SuffixTreeWithCPD(this);
+      stcpd.constructLCAAndMA();
+      
       // Find the centroid paths in the original suffix tree (i.e., the one
       // rooted at root). Then when we make copies we find the centroid
       // paths *once* in each of those.
@@ -101,8 +104,6 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       // Add wildcards (without including centroid edges).
       addWildcardSubtreesAt(root, k);
       
-      SuffixTreeWithCPD stcpd = new SuffixTreeWithCPD(this);
-      stcpd.constructLCAAndMA();
       return stcpd;
     }
   }

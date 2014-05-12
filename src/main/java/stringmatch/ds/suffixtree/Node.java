@@ -155,6 +155,8 @@ public class Node {
       
       if (outgoingEdge.getToNode() != null && outgoingEdge.getToNode().incomingEdge != outgoingEdge)
         throw new RuntimeException("Mismatched incomingEdge");
+      if (outgoingEdge.getFromNode() != this)
+        throw new RuntimeException("Mismatched fromNode.");
       
       if (outgoingEdge.getToNode() != null) {
         outgoingEdge.getToNode().sortEdgesAndPutNodesAtLeaves(height + outgoingEdgeHeight);
@@ -163,6 +165,19 @@ public class Node {
             (height + outgoingEdgeHeight);
         Node leaf = new Node(outgoingEdge, true, offset);
         outgoingEdge.setToNode(leaf);
+      }
+    }
+  }
+  
+  public void doubleCheckOutgoingEdges() {
+    for (Edge outgoingEdge : outgoingEdges) {
+      if (outgoingEdge.getToNode() != null && outgoingEdge.getToNode().incomingEdge != outgoingEdge)
+        throw new RuntimeException("Mismatched incomingEdge");
+      if (outgoingEdge.getFromNode() != this)
+        throw new RuntimeException("Mismatched fromNode.");
+      
+      if (outgoingEdge.getToNode() != null) {
+        outgoingEdge.getToNode().doubleCheckOutgoingEdges();
       }
     }
   }
@@ -272,6 +287,7 @@ public class Node {
           // Note: edge cannot be pointing directly to a leaf node (i.e., it must have children)
           // because otherwise there would be another edge that shares a '$' in common with
           // this one.
+          
           for (Edge childEdge : edge.getToNode().getOutgoingEdges()) {
             childEdge.fromNode = mergedNode;
             mergedNode.outgoingEdges.add(childEdge);
@@ -286,6 +302,9 @@ public class Node {
           Edge newChildEdge = new Edge(mergedNode, newChildEdgeTextSubstring);
           Node newChildNode = new Node(newChildEdge);
           newChildNode.outgoingEdges.addAll(edge.getToNode().outgoingEdges);
+          for (Edge e : edge.getToNode().outgoingEdges) {
+            e.fromNode = newChildNode;
+          }
           if (newChildNode.outgoingEdges.size() == 0) {
             newChildNode.isLeaf = true;
             newChildNode.leafIndex = edge.getToNode().leafIndex;
@@ -314,6 +333,9 @@ public class Node {
           Edge newChildEdge = new Edge(mergedNode, newChildEdgeTextSubstring);
           Node newChildNode = new Node(newChildEdge);
           newChildNode.outgoingEdges.addAll(matchingEdge.getToNode().outgoingEdges);
+          for (Edge e : matchingEdge.getToNode().outgoingEdges) {
+            e.fromNode = newChildNode;
+          }
           if (newChildNode.outgoingEdges.size() == 0) {
             newChildNode.isLeaf = true;
             newChildNode.leafIndex = matchingEdge.getToNode().leafIndex;
@@ -321,7 +343,7 @@ public class Node {
           mergedNode.addOutgoingEdge(newChildEdge);
           newChildEdge.setToNode(newChildNode);
         }
-        
+
         // Update the map of first characters to store the mergedEdge.
         outgoingEdgesByFirstChar.put(mergedEdge.getTextSubstring().getFirstChar(),
             mergedEdge);

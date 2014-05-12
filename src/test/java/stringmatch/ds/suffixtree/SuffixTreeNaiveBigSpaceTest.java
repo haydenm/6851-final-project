@@ -21,12 +21,22 @@ import stringmatch.ds.util.Pair;
 public class SuffixTreeNaiveBigSpaceTest {
 
   @Test
-  @Ignore
+  //@Ignore
   public void testBanana() {
-    SuffixTreeNaiveBigSpace.Builder suffixTreeBuilder = new SuffixTreeNaiveBigSpace.Builder(new Text("BANANAB", true), 2);
+    SuffixTreeNaiveBigSpace.Builder suffixTreeBuilder = new SuffixTreeNaiveBigSpace.Builder(new Text("BANANABANANA", true), 1);
     SuffixTreeNaiveBigSpace st = suffixTreeBuilder.build();
     st.printTree();
-    System.out.println(st.getAllSuffixesAsStrings());
+    AlphabetCharacter S = new AlphabetCharacter('*');
+    AlphabetCharacter A = new AlphabetCharacter('A');
+    AlphabetCharacter N = new AlphabetCharacter('N');
+    AlphabetCharacter B = new AlphabetCharacter('B');
+    Node NA = st.root.follow(S).getToNode().follow(A).getToNode().follow(N).getToNode().follow(N).getToNode();
+    Node BANANA = st.root.follow(S).getToNode().follow(A).getToNode().follow(N).getToNode().follow(N).getToNode().follow(B).getToNode();
+    System.out.println(NA);
+    System.out.println(BANANA);
+    System.out.println(BANANA.incomingEdge.getFromNode());
+    System.out.println(NA);
+    //System.out.println(st.getAllSuffixesAsStrings());
   }
   
   @Test
