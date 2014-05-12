@@ -24,7 +24,7 @@ public class SuffixTreeNaiveBigSpace extends SuffixTreeWithWildcards {
     if (node == null)
       return new ArrayList<Integer>();
     else
-      return node.getIndicesOfLeaves();
+      return node.getOffsetIndicesOfLeaves();
   }
   
   /*
@@ -100,6 +100,7 @@ public class SuffixTreeNaiveBigSpace extends SuffixTreeWithWildcards {
         nodeClone = turnIntoWildcardSubtree(wildcardSubtree);
         
         wildcardSubtree.constructLCAAndMA();
+        wildcardSubtree.constructLeafLexicographicIndexYFT();
       
         // Attach nodeClone onto node. nodeClone should have just one outgoing
         // edge: the wildcard edge.
@@ -119,6 +120,7 @@ public class SuffixTreeNaiveBigSpace extends SuffixTreeWithWildcards {
     public SuffixTreeNaiveBigSpace build() {
       SuffixTreeNaiveBigSpace stnbs = new SuffixTreeNaiveBigSpace(this);
       stnbs.constructLCAAndMA();
+      stnbs.constructLeafLexicographicIndexYFT();
       
       addWildcardSubtreesAt(root, k);
       

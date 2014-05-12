@@ -11,6 +11,8 @@ import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
 import stringmatch.ds.text.TextSubstring;
 import stringmatch.ds.util.Pair;
+import stringmatch.ds.yfasttrie.YFastTrie;
+import stringmatch.ds.yfasttrie.YFastTrie.Builder;
 
 public abstract class SuffixTreeWithWildcards extends SuffixTree {
   
@@ -23,12 +25,37 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
   // Used or MA queries
   Map<Node, Map<Integer, Pair<Node, Integer>>> MATable;
   
+  // Y-Fast tries for leaf lexicographic indices.
+  YFastTrie<Node> leafLexicographicIndices;
+  
   public SuffixTreeWithWildcards(Node root) {
     super(root);
   }
   
   public SuffixTreeWithWildcards(Builder builder) {
     super(builder.root);
+  }
+  
+  public void constructLeafLexicographicIndexYFT() {
+    List<Pair<Integer, Node>> leaves = constructLeafIndexArray(root);
+    YFastTrie.Builder<Node> yftBuilder = new YFastTrie.Builder<Node>();
+    leafLexicographicIndices = yftBuilder.buildFromPairs(leaves);
+  }
+  
+  protected List<Pair<Integer, Node>> constructLeafIndexArray(
+      Node node) {
+    List<Pair<Integer, Node>> leaves =
+        new ArrayList<Pair<Integer, Node>>();
+    if (node.isLeaf) {
+      leaves.add(new Pair<Integer, Node>(node.leafLexicographicIndex, node));
+      return leaves;
+    }
+    
+    for (Edge edge : node.getOutgoingEdges()) {
+      leaves.addAll(constructLeafIndexArray(edge.getToNode()));
+    }
+    
+    return leaves;
   }
   
   public void constructLCAAndMA() {
@@ -385,7 +412,7 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
           node.outgoingEdges.get(0).getTextSubstring().getFirstChar().equals(
               AlphabetCharacter.END_CHAR)) {
         node.isLeaf = true;
-        node.leafIndex = node.outgoingEdges.get(0).getToNode().leafIndex;
+        node.leafOffsetIndex = node.outgoingEdges.get(0).getToNode().leafOffsetIndex;
         node.outgoingEdges.clear();
         return newRoot;
       }

@@ -22,7 +22,8 @@ public class Node {
   
   protected Edge centroidEdge;
   protected boolean isLeaf;
-  protected int leafIndex;
+  protected int leafOffsetIndex;
+  protected int leafLexicographicIndex;
   protected int LCAIndex;
   protected int maxHeight;
   protected Edge longPathEdge;
@@ -39,15 +40,18 @@ public class Node {
     numLeaves = -1;
     centroidEdge = null;
     isLeaf = false;
-    leafIndex = -1;
+    leafOffsetIndex = -1;
+    leafLexicographicIndex = -1;
     LCAIndex = -1;
     maxHeight = -1;
   }
   
-  protected Node(Edge incomingEdge, boolean isLeaf, int leafIndex) {
+  protected Node(Edge incomingEdge, boolean isLeaf, int leafOffsetIndex,
+      int leafLexicographicIndex) {
     this(incomingEdge);
     this.isLeaf = isLeaf;
-    this.leafIndex = leafIndex;
+    this.leafOffsetIndex = leafOffsetIndex;
+    this.leafLexicographicIndex = leafLexicographicIndex;
     LCAIndex = -1;
     maxHeight = -1;
   }
@@ -147,7 +151,7 @@ public class Node {
     suffixLink = node;
   }
   
-  protected void sortEdgesAndPutNodesAtLeaves(int height) {
+  protected void sortEdgesAndPutNodesAtLeaves(int height, int[] leafCount) {
     Collections.sort(outgoingEdges);
     for (Edge outgoingEdge : outgoingEdges) {
       outgoingEdge.fixTextSubstringAfterBuild();
@@ -159,12 +163,14 @@ public class Node {
         throw new RuntimeException("Mismatched fromNode.");
       
       if (outgoingEdge.getToNode() != null) {
-        outgoingEdge.getToNode().sortEdgesAndPutNodesAtLeaves(height + outgoingEdgeHeight);
+        outgoingEdge.getToNode().sortEdgesAndPutNodesAtLeaves(
+            height + outgoingEdgeHeight, leafCount);
       } else {
         int offset = outgoingEdge.getTextSubstring().getText().getLength() - 
             (height + outgoingEdgeHeight);
-        Node leaf = new Node(outgoingEdge, true, offset);
+        Node leaf = new Node(outgoingEdge, true, offset, leafCount[0]);
         outgoingEdge.setToNode(leaf);
+        leafCount[0]++;
       }
     }
   }
@@ -237,14 +243,14 @@ public class Node {
   }
   
   /*
-   * Returns a list of the leafIndex (i.e., the positions of the leaves in the
+   * Returns a list of the leafOffsetIndex (i.e., the positions of the leaves in the
    * input text) for all the leaves in the subtree rooted at this.
    */
-  protected List<Integer> getIndicesOfLeaves() {
+  protected List<Integer> getOffsetIndicesOfLeaves() {
     List<Integer> indices = new ArrayList<Integer>();
     
     if (isLeaf()) {
-      indices.add(leafIndex);
+      indices.add(leafOffsetIndex);
       return indices;
     }
     
@@ -252,7 +258,7 @@ public class Node {
       if (!e.isWildcardEdge()) {
         // There's no need to follow wildcard edges because wildcard subtrees
         // are just copies of the tree we're in.
-        indices.addAll(e.getToNode().getIndicesOfLeaves());
+        indices.addAll(e.getToNode().getOffsetIndicesOfLeaves());
       }
     }
     
@@ -307,7 +313,8 @@ public class Node {
           }
           if (newChildNode.outgoingEdges.size() == 0) {
             newChildNode.isLeaf = true;
-            newChildNode.leafIndex = edge.getToNode().leafIndex;
+            newChildNode.leafOffsetIndex = edge.getToNode().leafOffsetIndex;
+            newChildNode.leafLexicographicIndex = edge.getToNode().leafLexicographicIndex;
           }
           mergedNode.addOutgoingEdge(newChildEdge);
           newChildEdge.setToNode(newChildNode);
@@ -338,7 +345,8 @@ public class Node {
           }
           if (newChildNode.outgoingEdges.size() == 0) {
             newChildNode.isLeaf = true;
-            newChildNode.leafIndex = matchingEdge.getToNode().leafIndex;
+            newChildNode.leafOffsetIndex = matchingEdge.getToNode().leafOffsetIndex;
+            newChildNode.leafLexicographicIndex = matchingEdge.getToNode().leafLexicographicIndex;
           }
           mergedNode.addOutgoingEdge(newChildEdge);
           newChildEdge.setToNode(newChildNode);
@@ -369,7 +377,8 @@ public class Node {
     if (centroidEdge == null)
       throw new IllegalArgumentException();
     
-    Node copy = new Node(incomingEdge, isLeaf, leafIndex);
+    Node copy = new Node(incomingEdge, isLeaf, leafOffsetIndex,
+        leafLexicographicIndex);
     copy.numLeaves = numLeaves - centroidEdge.getToNode().numLeaves;
     
     List<Edge> outgoingEdgesCopy = new ArrayList<Edge>(outgoingEdges.size() - 1);
@@ -397,7 +406,8 @@ public class Node {
    * Makes a deep clone of the tree rooted at this.
    */
   protected Node clone(boolean removeCentroidEdge, Edge incomingEdge) {
-    Node copy = new Node(incomingEdge, isLeaf, leafIndex);
+    Node copy = new Node(incomingEdge, isLeaf, leafOffsetIndex,
+        leafLexicographicIndex);
     
     copy.numLeaves = numLeaves;
     if (removeCentroidEdge && centroidEdge != null)
