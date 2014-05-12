@@ -17,6 +17,8 @@ public class Node {
 
   List<Edge> outgoingEdges;
   protected Edge incomingEdge;
+  protected Node leftMost;
+  protected Node rightMost;
 
   protected int numLeaves;
   
@@ -103,6 +105,38 @@ public class Node {
 		  }
 	  }
 	  return null;
+  }
+  
+  protected Edge followLeft() {
+    if (outgoingEdges.size() > 0) {
+      Edge left = outgoingEdges.get(0);
+      AlphabetCharacter first = left.getCharAt(0);
+        for (Edge e: outgoingEdges) {
+          AlphabetCharacter next = e.getCharAt(0);
+          if (first.compareTo(next) > 0 && !e.isWildcardEdge()) {
+            left = e;
+            first = next;
+          }
+        }
+        return left;
+    }
+    return null;
+  }
+  
+  protected Edge followRight() {
+    if (outgoingEdges.size() > 0) {
+      Edge right = outgoingEdges.get(0);
+      AlphabetCharacter first = right.getCharAt(0);
+        for (Edge e: outgoingEdges) {
+          AlphabetCharacter next = e.getCharAt(0);
+          if (first.compareTo(next) < 0 && !e.isWildcardEdge()) {
+            right = e;
+            first = next;
+          }
+        }
+        return right;
+    }
+    return null;
   }
   
   protected boolean isLeaf() {

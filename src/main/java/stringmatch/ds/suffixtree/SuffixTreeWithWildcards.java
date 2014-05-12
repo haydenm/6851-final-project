@@ -67,16 +67,36 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
     computeHeights();
     buildLongPaths();
     extendLadders();
+    setLeftAndRightLeaves();
+  }
+  
+  private void setLeftAndRightLeaves() {
+    setLeftAndRightLeaves(root);
+  }
+  
+  private void setLeftAndRightLeaves(Node n) {
+    if (!n.isLeaf()) {
+      for (Edge e: n.outgoingEdges) {
+        setLeftAndRightLeaves(e.getToNode());
+      }
+      Node leftChild = n.followLeft().getToNode();
+      n.leftMost = leftChild.leftMost;
+      Node rightChild = n.followRight().getToNode();
+      n.rightMost = rightChild.rightMost;
+    } else {
+      n.leftMost = n;
+      n.rightMost = n;
+    }
   }
   
   /*
    * Get the number of characters for which an edge and a TextSubstring (starting at start) match
    */
-  private Integer lengthOfMatch(TextSubstring p, int start, Edge e) {
+  private Integer lengthOfMatch(Text p, int start, Edge e) {
     if (e != null) {
       for (int i = 0; i < Math.min(e.getTextSubstring().length, p.getLength() - start); i++) {
         AlphabetCharacter nextOnEdge = e.getTextSubstring().getIthChar(i);
-        AlphabetCharacter nextInPattern = p.getIthChar(i + start);
+        AlphabetCharacter nextInPattern = p.getCharAtIndex(i + start);
         if (!nextOnEdge.equals(nextInPattern)) {
           return i;
         }
@@ -91,15 +111,15 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
    * the first element is the closest node and the second is the number of letters below the
    * node which match.
    */
-  protected Pair<Node, Integer> highestOverlapPoint(TextSubstring p) {
+  protected Pair<Node, Integer> highestOverlapPoint(Text p) {
     return highestOverlapPoint(p, 0, root);
   }
   
-  private Pair<Node, Integer> highestOverlapPoint(TextSubstring p, int start, Node current) {
+  private Pair<Node, Integer> highestOverlapPoint(Text p, int start, Node current) {
     if (start >= p.getLength()) {
       return new Pair<Node, Integer>(current, start - p.getLength());
     }
-    Edge e = current.follow(p.getIthChar(start));
+    Edge e = current.follow(p.getCharAtIndex(start));
     int length = lengthOfMatch(p, start, e);
     if (e != null) {
       if (length == e.getLength()) {
@@ -110,6 +130,27 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
     } else {
       return new Pair<Node, Integer>(current, 0);
     }
+  }
+  
+  protected Text constructHighestOverlap(Pair<Node, Integer> highestOverlapPoint) {
+    List<String> strs = new ArrayList<String>();
+    Node current = highestOverlapPoint.getLeft();
+    Edge e = current.incomingEdge;
+    if (highestOverlapPoint.getRight() != 0) {
+      strs.add(e.toString().substring(0, e.getLength() + highestOverlapPoint.getRight()));
+    }
+    while (e != null) {
+      current = e.getFromNode();
+      e = current.incomingEdge;
+      if (e != null) {
+        strs.add(e.toString()); 
+      }
+    }
+    StringBuilder sb = new StringBuilder();
+    for (int i = strs.size() - 1; i >= 0; i--) {
+      sb.append(strs.get(i));
+    }
+    return new Text(sb.toString(), false);
   }
   
   /*
@@ -452,7 +493,7 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
   
   public static void main(String[] args) {
     Text t = new Text("BANANABANANA", true);
-    SuffixTreeWithCPD.Builder suffixTreeBuilder = new SuffixTreeWithCPD.Builder(t, 0);
+    SuffixTreeWithCPD.Builder suffixTreeBuilder = new SuffixTreeWithCPD.Builder(t, 1);
     SuffixTreeWithCPD st = suffixTreeBuilder.build();
     st.printTree();
     //System.out.println(st.eulerTour(0, st.root));
@@ -464,6 +505,8 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
     Node n1 = st.root.follow(A).getToNode().follow(N).getToNode().follow(N).getToNode();
     Node n2 = st.root.follow(A).getToNode().follow(N).getToNode();
     System.out.println(st.LCA(n1, n2));
+    st.printNode(st.root.follow(S).getToNode().leftMost);
+    st.printNode(st.root.follow(S).getToNode().rightMost);
     //Node NA = st.root.follow(S).getToNode().follow(A).getToNode().follow(N).getToNode().follow(N).getToNode();
     //Node BANANA = st.root.follow(S).getToNode().follow(A).getToNode().follow(N).getToNode().follow(N).getToNode().follow(B).getToNode();
     //Node n2 = st.root.follow(A).getToNode().follow(N).getToNode().follow(N).getToNode().follow(B).getToNode().follow(B).getToNode().follow(B).getToNode();

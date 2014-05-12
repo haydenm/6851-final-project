@@ -106,6 +106,20 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     return query(p);
   }
   
+  public Pair<Node, Integer> rootedLCP(Text p, Pair<Node, Integer> highestOverlapPoint, Text hos) {
+    //Pair<Node, Integer> hop = highestOverlapPoint(p);
+    //Text hos = constructHighestOverlap(hop);
+    int i = highestOverlapPoint.getLeft().leafLexicographicIndex;
+    Text t = highestOverlapPoint.getLeft().incomingEdge.getTextSubstring().getText();
+    int pIndex;
+    if (hos.compareTo(p) > 0) {
+      pIndex = i - 1;
+    } else {
+      pIndex = i + 1;
+    }
+    return null;
+  }
+  
   public Pair<Node, Integer> slowUnrootedLCP(Text p, Pair<Node, Integer> start) {
     Node node = start.getLeft();
     int offset = start.getRight();
@@ -152,10 +166,13 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
     Node n1 = st.root.follow(B).getToNode();
     Pair<Node, Integer> start = new Pair<Node, Integer>(n1, -4);
-    for (Pair<Node, Integer> p: st.smartQuery(new Text("**NA", false))) {
+    for (Pair<Node, Integer> p: st.smartQuery(new Text("A", false))) {
       st.printNode(p.getLeft());
       System.out.println(p.getRight());
     }
+    System.out.println("TESTA".compareTo("TEST$"));
+    System.out.println(n1.followLeft());
+    //st.rootedLCP(new Text("TEST", false));
     //System.out.println(SuffixTreeWithCPD.breakQuery(new Text("***TEST*AGAIN**TEST*", false)));
     
   }
