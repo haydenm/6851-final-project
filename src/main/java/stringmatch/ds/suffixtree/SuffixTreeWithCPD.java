@@ -1,7 +1,12 @@
 package stringmatch.ds.suffixtree;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
+import stringmatch.ds.text.TextSubstring;
+import stringmatch.ds.util.Pair;
 
 /*
  * Suffix tree as described by Cole et al. (i.e., with Centroid Path Decomposition).
@@ -14,6 +19,122 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
   
   public SuffixTreeWithCPD(Builder builder) {
     super(builder.root);
+  }
+  
+  protected boolean checkMatch(Text p, int start, Edge e, int offset) {
+    if (e != null) {
+      for (int i = 0; i < Math.min(e.getTextSubstring().length - offset, p.getLength()
+          - start); i++) {
+        AlphabetCharacter nextOnEdge = e.getTextSubstring().getIthChar(i + offset);
+        AlphabetCharacter nextInPattern = p.getCharAtIndex(start + i);
+        if (!nextOnEdge.equals(nextInPattern)) {
+            return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+  
+  public List<Pair<Node, Integer>> smartQuery(Text p) {
+    List<Text> subQueries = breakQuery(p);
+    Text query = subQueries.get(0);
+    Pair<Node, Integer> prev = slowRootedLCP(query);
+    System.out.println(prev);
+    if (subQueries.size() > 1) {
+      return smartQuery(subQueries, 1, prev);
+    } else {
+      List<Pair<Node, Integer>> matches = new ArrayList<Pair<Node, Integer>>();
+      matches.add(prev);
+      return matches;
+    }
+  }
+  
+  public List<Pair<Node, Integer>> smartQuery(List<Text> subQueries, int i, Pair<Node, Integer> prev) {
+    List<Pair<Node, Integer>> matches = new ArrayList<Pair<Node, Integer>>();
+    if (prev.getRight() == 0) {
+      // Check wildcard subtree
+      SuffixTreeWithCPD w =
+          (SuffixTreeWithCPD) ((WildcardEdge) prev.getLeft().follow(AlphabetCharacter.WILDCARD)).wildcardTree;
+      Pair<Node, Integer> res1 = w.slowRootedLCP(subQueries.get(i));
+      if (res1 != null) {
+        matches.addAll(w.smartQuery(subQueries, i + 1, res1));
+      }
+      // Check along centroid path
+      Edge e = prev.getLeft().centroidEdge;
+      Pair<Node, Integer> next = new Pair<Node, Integer>(e.getToNode(), 1 - e.getLength());
+      Pair<Node, Integer> res2 = slowUnrootedLCP(subQueries.get(i), next);
+      if (res2 != null) {
+        matches.addAll(smartQuery(subQueries, i + 1, res2));
+      }
+    } else {
+      // Just check along current path
+      Pair<Node, Integer> next = new Pair<Node, Integer>(prev.getLeft(), prev.getRight() + 1);
+      System.out.println(next);
+      Pair<Node, Integer> res = slowUnrootedLCP(subQueries.get(i), next);
+      if (res != null) {
+        matches.addAll(smartQuery(subQueries, i + 1, res));
+      }
+    }
+    return matches;
+  }
+  
+  public Pair<Node, Integer> slowRootedLCP(Text p) {
+    return query(p);
+  }
+  
+  public Pair<Node, Integer> slowUnrootedLCP(Text p, Pair<Node, Integer> start) {
+    Node node = start.getLeft();
+    int offset = start.getRight();
+    Edge e = node.incomingEdge;
+    if (e == null || e.getLength() + offset < 0) {
+      throw new RuntimeException("Malformed unrooted LCP query");
+    }
+    System.out.println(e.getLength() + offset);
+    if (!checkMatch(p, 0, e, e.getLength() + offset)) {
+      return null;
+    } else {
+      return query(p, -offset, node);
+    }
+    
+  }
+  
+  public int getDepth(Node node) {
+    return root.maxHeight - node.maxHeight;
+  }
+  
+  public static List<Text> breakQuery(Text p) {
+    List<Text> subQueries = new ArrayList<Text>();
+    int start = 0;
+    int len = 0;
+    for (int i = 0; i < p.getSize(); i++) {
+      if (p.getCharAtIndex(i).equals(AlphabetCharacter.WILDCARD)) {
+        subQueries.add(new Text(p.toString().substring(start, start + len), false));
+        start = i + 1;
+        len = 0;
+      } else {
+        len += 1;
+      }
+    }
+    if (len > 0) {
+      subQueries.add(new Text(p.toString().substring(start, start + len), false));
+    }
+    return subQueries;
+  }
+  
+  public static void main(String[] args) {
+    Text t = new Text("BANANABANANA", true);
+    SuffixTreeWithCPD.Builder suffixTreeBuilder = new SuffixTreeWithCPD.Builder(t, 0);
+    SuffixTreeWithCPD st = suffixTreeBuilder.build();
+    st.printTree();
+    AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
+    AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
+    AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
+    Node n1 = st.root.follow(B).getToNode();
+    Pair<Node, Integer> start = new Pair<Node, Integer>(n1, -4);
+    System.out.println(st.smartQuery(new Text("BANANA*A", false)));
+    //System.out.println(SuffixTreeWithCPD.breakQuery(new Text("***TEST*AGAIN**TEST*", false)));
+    
   }
   
   public static class Builder extends SuffixTreeWithWildcards.Builder {
@@ -70,7 +191,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
           
           SuffixTreeWithWildcards wildcardSubtree = new SuffixTreeWithCPD(nodeClone);
           nodeClone = turnIntoWildcardSubtree(wildcardSubtree);
-          wildcardSubtree.constructLCAAndMA();
+          //wildcardSubtree.constructLCAAndMA();
       
           // Attach nodeClone onto node. nodeClone should have just one outgoing
           // edge: the wildcard edge.

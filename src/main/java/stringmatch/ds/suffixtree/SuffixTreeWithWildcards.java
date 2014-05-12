@@ -11,6 +11,7 @@ import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
 import stringmatch.ds.text.TextSubstring;
 import stringmatch.ds.util.Pair;
+import stringmatch.ds.yfasttrie.cuckoohash.CuckooHashMap;
 
 public abstract class SuffixTreeWithWildcards extends SuffixTree {
   
@@ -18,10 +19,10 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
   
   // Used for LCA queries
   private List<Pair<Integer, Node>> LCAOrder;
-  Map<Integer, Map<Integer, Integer>> LCATable;
+  CuckooHashMap<Integer, CuckooHashMap<Integer, Integer>> LCATable;
   
   // Used or MA queries
-  Map<Node, Map<Integer, Pair<Node, Integer>>> MATable;
+  CuckooHashMap<Node, CuckooHashMap<Integer, Pair<Node, Integer>>> MATable;
   
   public SuffixTreeWithWildcards(Node root) {
     super(root);
@@ -129,10 +130,11 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
    * the index of the minimum element between that index and the index 2^i to the right,
    * for all values of i.
    */
-  private Map<Integer, Map<Integer, Integer>> buildLCATable() {
-    Map<Integer, Map<Integer, Integer>> table = new HashMap<Integer, Map<Integer, Integer>>();
+  private CuckooHashMap<Integer, CuckooHashMap<Integer, Integer>> buildLCATable() {
+    CuckooHashMap<Integer, CuckooHashMap<Integer, Integer>> table =
+        new CuckooHashMap<Integer, CuckooHashMap<Integer, Integer>>();
     for (int index = 0; index < LCAOrder.size(); index++) {
-      Map<Integer, Integer> inner = new HashMap<Integer, Integer>();
+      CuckooHashMap<Integer, Integer> inner = new CuckooHashMap<Integer, Integer>();
       for (int i = 1; i < log2(LCAOrder.size()); i++) {
         int end = Math.min(LCAOrder.size() - 1, (int) Math.pow(2, i) + index);
         inner.put((int) Math.pow(2, i), findMin(index, end));
@@ -199,23 +201,24 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
    * is either this point or the node above this point if the point appears on the edge. The second
    * element represents the distance that that point occurs below the node.
    */
-  private Map<Node, Map<Integer, Pair<Node, Integer>>> buildMATable() {
-    Map<Node, Map<Integer, Pair<Node, Integer>>> table = new HashMap<Node, Map<Integer, Pair<Node, Integer>>>();
+  private CuckooHashMap<Node, CuckooHashMap<Integer, Pair<Node, Integer>>> buildMATable() {
+    CuckooHashMap<Node, CuckooHashMap<Integer, Pair<Node, Integer>>> table =
+        new CuckooHashMap<Node, CuckooHashMap<Integer, Pair<Node, Integer>>>();
     buildMATable(root, table);
     return table;
   }
   
-  private void buildMATable(Node node, Map<Node, Map<Integer, Pair<Node, Integer>>> table) {
+  private void buildMATable(Node node, CuckooHashMap<Node, CuckooHashMap<Integer, Pair<Node, Integer>>> table) {
     for (Edge e: node.outgoingEdges) {
       Node n = e.getToNode();
-      Map<Integer, Pair<Node, Integer>> inner = buildInnerMATable(n);
+      CuckooHashMap<Integer, Pair<Node, Integer>> inner = buildInnerMATable(n);
       table.put(n, inner);
       buildMATable(n, table);
     }
   }
   
-  private Map<Integer, Pair<Node, Integer>> buildInnerMATable(Node node) {
-    Map<Integer, Pair<Node, Integer>> inner = new HashMap<Integer, Pair<Node, Integer>>();
+  private CuckooHashMap<Integer, Pair<Node, Integer>> buildInnerMATable(Node node) {
+    CuckooHashMap<Integer, Pair<Node, Integer>> inner = new CuckooHashMap<Integer, Pair<Node, Integer>>();
     for (int i = 0; i < log2(node.incomingEdge.getTextSubstring().getText().getSize()); i++) {
       int jump = (int) Math.pow(2, i);
       int k = 0;
@@ -421,17 +424,20 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
   
   public static void main(String[] args) {
     Text t = new Text("BANANABANANA", true);
-    SuffixTreeWithCPD.Builder suffixTreeBuilder = new SuffixTreeWithCPD.Builder(t, 1);
+    SuffixTreeWithCPD.Builder suffixTreeBuilder = new SuffixTreeWithCPD.Builder(t, 0);
     SuffixTreeWithCPD st = suffixTreeBuilder.build();
     st.printTree();
-    System.out.println(st.eulerTour(0, st.root));
+    //System.out.println(st.eulerTour(0, st.root));
     AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
     AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
     AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
     AlphabetCharacter D = new AlphabetCharacter(new Character('$'));
     AlphabetCharacter S = new AlphabetCharacter(new Character('*'));
-    Node NA = st.root.follow(S).getToNode().follow(A).getToNode().follow(N).getToNode().follow(N).getToNode();
-    Node BANANA = st.root.follow(S).getToNode().follow(A).getToNode().follow(N).getToNode().follow(N).getToNode().follow(B).getToNode();
+    Node n1 = st.root.follow(A).getToNode().follow(N).getToNode().follow(N).getToNode();
+    Node n2 = st.root.follow(A).getToNode().follow(N).getToNode();
+    System.out.println(st.LCA(n1, n2));
+    //Node NA = st.root.follow(S).getToNode().follow(A).getToNode().follow(N).getToNode().follow(N).getToNode();
+    //Node BANANA = st.root.follow(S).getToNode().follow(A).getToNode().follow(N).getToNode().follow(N).getToNode().follow(B).getToNode();
     //Node n2 = st.root.follow(A).getToNode().follow(N).getToNode().follow(N).getToNode().follow(B).getToNode().follow(B).getToNode().follow(B).getToNode();
     //Text t = new Text("ANAF", false);
     //Pair<Node, Integer> p = st.highestOverlapPoint(new TextSubstring(t, 0, t.getSize()));
@@ -439,9 +445,6 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
     //System.out.println(st.root.maxHeight);
     //System.out.println(st.MA(n2, 0));
     //System.out.println(st.eulerTour());
-    System.out.println(NA.follow(B).getFromNode() == NA);
-    System.out.println(BANANA);
-    System.out.println(BANANA.incomingEdge.getFromNode() == NA);
   }
   
 }
