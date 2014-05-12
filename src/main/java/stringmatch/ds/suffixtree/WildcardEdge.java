@@ -8,8 +8,13 @@ import stringmatch.ds.text.TextSubstring;
  */
 public class WildcardEdge extends Edge {
 
-  public WildcardEdge(Node fromNode) {
+  protected SuffixTreeWithWildcards wildcardTree;
+  
+  public WildcardEdge(Node fromNode,
+      SuffixTreeWithWildcards wildcardTree) {
     super(fromNode, null);
+    this.wildcardTree = wildcardTree;
+    toNode = wildcardTree.root;
   }
   
   public AlphabetCharacter getCharAt(int i) {
@@ -33,9 +38,7 @@ public class WildcardEdge extends Edge {
   }
   
   public Edge clone(Node fromNode) {
-    Edge copy = new WildcardEdge(fromNode);
-    copy.toNode = toNode.clone(false, copy);
-    return copy;
+    throw new RuntimeException("We shouldn't be cloning a wildcard edge!");
   }
   
   @Override

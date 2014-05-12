@@ -8,8 +8,12 @@ import stringmatch.ds.text.Text;
  */
 public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
 
+  public SuffixTreeWithCPD(Node root) {
+    super(root);
+  }
+  
   public SuffixTreeWithCPD(Builder builder) {
-    root = builder.root;
+    super(builder.root);
   }
   
   public static class Builder extends SuffixTreeWithWildcards.Builder {
@@ -64,7 +68,9 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
           // otherwise wildcards could match for '$', which isn't really in the
           // input text.
           
-          nodeClone = turnIntoWildcardSubtreeAt(nodeClone);
+          SuffixTreeWithWildcards wildcardSubtree = new SuffixTreeWithCPD(nodeClone);
+          nodeClone = turnIntoWildcardSubtree(wildcardSubtree);
+          wildcardSubtree.constructLCAAndMA();
       
           // Attach nodeClone onto node. nodeClone should have just one outgoing
           // edge: the wildcard edge.
@@ -95,7 +101,9 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       // Add wildcards (without including centroid edges).
       addWildcardSubtreesAt(root, k);
       
-      return new SuffixTreeWithCPD(this);
+      SuffixTreeWithCPD stcpd = new SuffixTreeWithCPD(this);
+      stcpd.constructLCAAndMA();
+      return stcpd;
     }
   }
 

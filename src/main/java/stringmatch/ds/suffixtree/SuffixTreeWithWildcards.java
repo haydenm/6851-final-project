@@ -23,10 +23,15 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
   // Used or MA queries
   Map<Node, Map<Integer, Pair<Node, Integer>>> MATable;
   
-  public SuffixTreeWithWildcards() { }
+  public SuffixTreeWithWildcards(Node root) {
+    super(root);
+  }
   
   public SuffixTreeWithWildcards(Builder builder) {
-    root = builder.root;
+    super(builder.root);
+  }
+  
+  public void constructLCAAndMA() {
     LCAOrder = eulerTour();
     LCATable = buildLCATable();
     MATable = buildMATable();
@@ -298,10 +303,11 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
     } 
     
     /*
-     * Turns the tree rooted at node into a wildcard subtree by replacing
+     * Turns the given tree into a wildcard subtree by replacing
      * the first characters with * and condensing the tree rooted at node.
      */
-    protected static Node turnIntoWildcardSubtreeAt(Node node) {
+    protected static Node turnIntoWildcardSubtree(
+        SuffixTreeWithWildcards wildcardSubtree) {
       // Replace first char of each edge with a wildcard.
       // Specifically, represent this by:
       // (1) adding a new WildcardEdge out of node,
@@ -316,10 +322,10 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
       // Step (1)
       // Turn node into the split node and make the root a new node.
      
+      Node node = wildcardSubtree.root;
       Node newRoot = new Node(null);
-      Edge wildcardEdge = new WildcardEdge(newRoot);
+      Edge wildcardEdge = new WildcardEdge(newRoot, wildcardSubtree);
       newRoot.addOutgoingEdge(wildcardEdge);
-      wildcardEdge.setToNode(node);
       node.setIncomingEdge(wildcardEdge);
       
       // There's a special case in which node will become a leaf. This happens
