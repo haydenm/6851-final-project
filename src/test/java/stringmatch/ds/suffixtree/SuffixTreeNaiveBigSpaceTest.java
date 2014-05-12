@@ -1,6 +1,7 @@
 package stringmatch.ds.suffixtree;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -22,10 +23,11 @@ public class SuffixTreeNaiveBigSpaceTest {
 
   @Test
   //@Ignore
-  public void testBanana() {
+  public void testBananaBanana() {
     SuffixTreeNaiveBigSpace.Builder suffixTreeBuilder = new SuffixTreeNaiveBigSpace.Builder(new Text("BANANABANANA", true), 1);
     SuffixTreeNaiveBigSpace st = suffixTreeBuilder.build();
     st.printTree();
+    /*
     AlphabetCharacter S = new AlphabetCharacter('*');
     AlphabetCharacter A = new AlphabetCharacter('A');
     AlphabetCharacter N = new AlphabetCharacter('N');
@@ -37,6 +39,7 @@ public class SuffixTreeNaiveBigSpaceTest {
     System.out.println(BANANA.incomingEdge.getFromNode());
     System.out.println(NA);
     //System.out.println(st.getAllSuffixesAsStrings());
+     * */
   }
   
   @Test
@@ -195,6 +198,72 @@ public class SuffixTreeNaiveBigSpaceTest {
     SuffixTreeNaiveBigSpace st = suffixTreeBuilder.build();
     //st.printTree();
     System.out.println("Number of matches: " + st.queryForIndices(new Text("H**A*", false)).size());
+  }
+  
+  @Test
+  public void testYFTBanana() {
+    SuffixTreeNaiveBigSpace.Builder suffixTreeBuilder = new SuffixTreeNaiveBigSpace.Builder(new Text("BANANA", true), 1);
+    SuffixTreeNaiveBigSpace st = suffixTreeBuilder.build();
+    for (int i = 0; i < "BANANA".length(); i++) {
+      assertTrue(st.leafLexicographicIndices.hasKey(2*i));
+    }
+    for (int i = "BANANA".length(); i < 20; i++) {
+      assertFalse(st.leafLexicographicIndices.hasKey(2*i));
+    }
+    
+    assertEquals(null, st.leafLexicographicIndices.predecessor(2*0));
+    for (int i = 1; i <= "BANANA".length(); i++) {
+      assertEquals(2*(i-1), st.leafLexicographicIndices.predecessor(2*i).getLeft().intValue());
+    }
+    assertEquals(2*5, st.leafLexicographicIndices.predecessor(2*10).getLeft().intValue());
+    
+    assertEquals("$", st.leafLexicographicIndices.predecessor(2*1).getRight().toString());
+    assertEquals("$", st.leafLexicographicIndices.predecessor(2*2).getRight().toString());
+    assertEquals("NA$", st.leafLexicographicIndices.predecessor(2*3).getRight().toString());
+    assertEquals("BANANA$", st.leafLexicographicIndices.predecessor(2*4).getRight().toString());
+    assertEquals("$", st.leafLexicographicIndices.predecessor(2*5).getRight().toString());
+    
+    assertEquals(null, st.leafLexicographicIndices.successor(2*5));
+    for (int i = 0; i < "BANANA".length() - 1; i++) {
+      assertEquals(2*(i+1), st.leafLexicographicIndices.successor(2*i).getLeft().intValue());
+    }
+    
+    assertEquals("$", st.leafLexicographicIndices.successor(2*0).getRight().toString());
+    assertEquals("NA$", st.leafLexicographicIndices.successor(2*1).getRight().toString());
+    assertEquals("BANANA$", st.leafLexicographicIndices.successor(2*2).getRight().toString());
+    assertEquals("$", st.leafLexicographicIndices.successor(2*3).getRight().toString());
+    assertEquals("NA$", st.leafLexicographicIndices.successor(2*4).getRight().toString());
+    
+    SuffixTreeWithWildcards stWild = ((WildcardEdge)st.root.follow(new AlphabetCharacter('*'))).wildcardTree;
+    for (int i = 0; i < "BANANA".length(); i++) {
+      assertTrue(stWild.leafLexicographicIndices.hasKey(2*i));
+    }
+    for (int i = "BANANA".length(); i < 20; i++) {
+      assertFalse(stWild.leafLexicographicIndices.hasKey(2*i));
+    }
+    
+    assertEquals(null, st.leafLexicographicIndices.predecessor(2*0));
+    for (int i = 1; i <= "BANANA".length(); i++) {
+      assertEquals(2*(i-1), stWild.leafLexicographicIndices.predecessor(2*i).getLeft().intValue());
+    }
+    assertEquals(2*5, stWild.leafLexicographicIndices.predecessor(2*10).getLeft().intValue());
+  }
+  
+  @Test
+  public void testYFTBananaBanana() {
+    SuffixTreeNaiveBigSpace.Builder suffixTreeBuilder = new SuffixTreeNaiveBigSpace.Builder(new Text("BANANABANANA", true), 1);
+    SuffixTreeNaiveBigSpace st = suffixTreeBuilder.build();
+    st.printTree();
+    for (int i = 0; i < "BANANABANANA".length(); i++) {
+      assertTrue(st.leafLexicographicIndices.hasKey(2*i));
+    }
+    for (int i = "BANANABANANA".length(); i < 20; i++) {
+      assertFalse(st.leafLexicographicIndices.hasKey(2*i));
+    }
+    
+    SuffixTreeWithWildcards stWild = ((WildcardEdge)st.root.follow(new AlphabetCharacter('A')).getToNode().follow(new AlphabetCharacter('N')).getToNode().follow(new AlphabetCharacter('*'))).wildcardTree;
+    assertTrue(stWild.leafLexicographicIndices.hasKey(2*3));
+    assertFalse(stWild.leafLexicographicIndices.hasKey(2*10));
   }
   
 }

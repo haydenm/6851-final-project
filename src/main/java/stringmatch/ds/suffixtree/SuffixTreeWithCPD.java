@@ -214,7 +214,8 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
           
           SuffixTreeWithWildcards wildcardSubtree = new SuffixTreeWithCPD(nodeClone);
           nodeClone = turnIntoWildcardSubtree(wildcardSubtree);
-          //wildcardSubtree.constructLCAAndMA();
+          wildcardSubtree.constructLCAAndMA();
+          wildcardSubtree.constructLeafLexicographicIndexYFT();
       
           // Attach nodeClone onto node. nodeClone should have just one outgoing
           // edge: the wildcard edge.
@@ -239,6 +240,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     public SuffixTreeWithCPD build() {
       SuffixTreeWithCPD stcpd = new SuffixTreeWithCPD(this);
       stcpd.constructLCAAndMA();
+      stcpd.constructLeafLexicographicIndexYFT();
       
       // Find the centroid paths in the original suffix tree (i.e., the one
       // rooted at root). Then when we make copies we find the centroid

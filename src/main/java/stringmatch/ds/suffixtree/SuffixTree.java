@@ -372,8 +372,8 @@ public class SuffixTree {
 
     protected SuffixTree build() {
       processPrefixes();
-      root.sortEdgesAndPutNodesAtLeaves(0);
       root.removeEndCharEdge();
+      root.sortEdgesAndPutNodesAtLeaves(0, new int[] { 0 });
       return new SuffixTree(this);
     }
 
