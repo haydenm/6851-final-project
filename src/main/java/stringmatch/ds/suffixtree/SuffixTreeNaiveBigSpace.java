@@ -99,9 +99,6 @@ public class SuffixTreeNaiveBigSpace extends SuffixTreeWithWildcards {
         SuffixTreeWithWildcards wildcardSubtree
             = new SuffixTreeNaiveBigSpace(nodeClone);
         nodeClone = turnIntoWildcardSubtree(wildcardSubtree);
-        
-        wildcardSubtree.constructLCAAndMA();
-        wildcardSubtree.constructLeafLexicographicIndexYFT();
       
         // Attach nodeClone onto node. nodeClone should have just one outgoing
         // edge: the wildcard edge.
@@ -120,8 +117,6 @@ public class SuffixTreeNaiveBigSpace extends SuffixTreeWithWildcards {
     
     public SuffixTreeNaiveBigSpace build() {
       SuffixTreeNaiveBigSpace stnbs = new SuffixTreeNaiveBigSpace(this);
-      stnbs.constructLCAAndMA();
-      stnbs.constructLeafLexicographicIndexYFT();
       
       addWildcardSubtreesAt(root, k);
       
