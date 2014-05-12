@@ -6,10 +6,14 @@ import java.util.List;
 import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
 
-public class SuffixTreeNaiveBigSpace extends SuffixTree {
+public class SuffixTreeNaiveBigSpace extends SuffixTreeWithWildcards {
+  
+  public SuffixTreeNaiveBigSpace(Node root) {
+    super(root);
+  }
   
   public SuffixTreeNaiveBigSpace(Builder builder) {
-    root = builder.root;
+    super(builder.root);
   }
 
   /*
@@ -90,7 +94,11 @@ public class SuffixTreeNaiveBigSpace extends SuffixTree {
         // which is '$'. We don't want to turn this edge into a wildcard because
         // otherwise wildcards could match for '$', which isn't really in the
         // input text.
-        nodeClone = turnIntoWildcardSubtreeAt(nodeClone);
+        
+        SuffixTreeWithWildcards wildcardSubtree
+            = new SuffixTreeNaiveBigSpace(nodeClone);
+        nodeClone = turnIntoWildcardSubtree(wildcardSubtree);
+        wildcardSubtree.constructLCAAndMA();
       
         // Attach nodeClone onto node. nodeClone should have just one outgoing
         // edge: the wildcard edge.
@@ -110,7 +118,9 @@ public class SuffixTreeNaiveBigSpace extends SuffixTree {
     public SuffixTreeNaiveBigSpace build() {
       addWildcardSubtreesAt(root, k);
       
-      return new SuffixTreeNaiveBigSpace(this);
+      SuffixTreeNaiveBigSpace stnbs = new SuffixTreeNaiveBigSpace(this);
+      stnbs.constructLCAAndMA();
+      return stnbs;
     }
   }
   
