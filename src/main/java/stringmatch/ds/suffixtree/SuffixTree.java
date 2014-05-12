@@ -247,6 +247,7 @@ public class SuffixTree {
         // Add a new edge.
         Edge edge = new Edge(activeNode, substr.getEndIndex() - 1, this);
         activeNode.addOutgoingEdge(edge);
+
         if (prefixStart == prefixEnd)
           prefixEnd++;
         prefixStart++;
@@ -254,6 +255,7 @@ public class SuffixTree {
             prefixEnd - prefixStart);
         // activeNode as used below should stay as is, even if activePoint.getActiveNode()
         // changes with the call immediately below.
+
         resetWithSuffixLinks(newSubstr);
         if (insertsAtStep > 0 && activeNode != root) {
           lastInsertedNode.setSuffixLink(activeNode);
@@ -351,6 +353,7 @@ public class SuffixTree {
         TextSubstring newSubstr = new TextSubstring(inputText, prefixStart,
             prefixEnd - prefixStart);
         resetWithSuffixLinks(newSubstr);
+
         if (newSubstr.getStartIndex() < newSubstr.getEndIndex())
           addSubstring(newSubstr);
       }

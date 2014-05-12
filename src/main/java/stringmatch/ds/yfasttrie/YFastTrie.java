@@ -168,8 +168,8 @@ public class YFastTrie<T> {
         if (currentBBST.size() == bbstSize) {
           // Find a representative element, which can be the key inserted
           // bbstSize/2 iterations ago.
-          int rep = keys.get(i - bbstSize/2).getLeft();
-          
+          int rep = keys.get(i - 1 - bbstSize/2).getLeft();
+
           // Store the BBST and start with a new one.
           bbsts.put(rep, currentBBST);
           bbstRepresentatives.add(rep);

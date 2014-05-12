@@ -416,7 +416,7 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
       
       // Now condense the tree rooted at node.
       node.condense();
-      
+            
       return newRoot;
     }
     
