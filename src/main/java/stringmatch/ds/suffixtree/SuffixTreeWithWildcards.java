@@ -41,22 +41,67 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
   }
   
   /*
+   * Get the number of characters for which an edge and a TextSubstring (starting at start) match
+   */
+  private Integer lengthOfMatch(TextSubstring p, int start, Edge e) {
+    if (e != null) {
+      for (int i = 0; i < Math.min(e.getTextSubstring().length, p.getLength() - start); i++) {
+        AlphabetCharacter nextOnEdge = e.getTextSubstring().getIthChar(i);
+        AlphabetCharacter nextInPattern = p.getIthChar(i + start);
+        if (!nextOnEdge.equals(nextInPattern)) {
+          return i;
+        }
+      }
+      return Math.min(e.getTextSubstring().length, p.getLength() - start);
+    }
+    return 0;
+  }
+  
+  /*
+   * Find the point with the most overlap with p. This is represented as a pair, where
+   * the first element is the closest node and the second is the number of letters below the
+   * node which match.
+   */
+  protected Pair<Node, Integer> highestOverlapPoint(TextSubstring p) {
+    return highestOverlapPoint(p, 0, root);
+  }
+  
+  private Pair<Node, Integer> highestOverlapPoint(TextSubstring p, int start, Node current) {
+    if (start >= p.getLength()) {
+      return new Pair<Node, Integer>(current, start - p.getLength());
+    }
+    Edge e = current.follow(p.getIthChar(start));
+    int length = lengthOfMatch(p, start, e);
+    if (e != null) {
+      if (length == e.getLength()) {
+        return highestOverlapPoint(p, start + e.getTextSubstring().length, e.getToNode());
+      } else {
+        return new Pair<Node, Integer>(e.getToNode(), length - e.getLength());
+      }
+    } else {
+      return new Pair<Node, Integer>(current, 0);
+    }
+  }
+  
+  /*
    * Perform an euler tour on the tree, recording the depth of each node. This is
    * used for LCA.
    */
-  private List<Pair<Integer, Node>> eulerTour() {
+  protected List<Pair<Integer, Node>> eulerTour() {
     return eulerTour(0, root);
   }
 
-  private List<Pair<Integer, Node>> eulerTour(int depth, Node start) {
+  protected List<Pair<Integer, Node>> eulerTour(int depth, Node start) {
     Pair<Integer, Node> pair = new Pair<Integer, Node>(depth, start);
     List<Pair<Integer, Node>> order = new ArrayList<Pair<Integer, Node>>();
     order.add(pair);
     if (!start.isLeaf()) {
       for (int i = 0; i < start.numChildren(); i++) {
-        List<Pair<Integer, Node>> l = eulerTour(depth + 1, start.getChild(i));
-        order.addAll(l);
-        order.add(pair);
+        if (!start.outgoingEdges.get(i).isWildcardEdge()) {
+          List<Pair<Integer, Node>> l = eulerTour(depth + 1, start.getChild(i));
+          order.addAll(l);
+          order.add(pair);
+        }
       }
     }
     return order;
@@ -226,7 +271,7 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
     Node current = node;
     while (current != null) {
       for (Edge e: current.outgoingEdges) {
-        if (e!= current.longPathEdge) {
+        if (e!= current.longPathEdge && !e.isWildcardEdge()) {
           buildLongPaths(e.getToNode());
         }
       }
@@ -255,7 +300,7 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
     if (nodeHeight == height) {
       Node current = node;
       Edge e = node.incomingEdge;
-      while (e != null && path.getLength() < 2 * height) {
+      while (e != null && path.getLength() < 2 * height && !e.isWildcardEdge()) {
         current = e.getFromNode();
         path.prependNode(current);
         e = current.incomingEdge;
@@ -263,7 +308,9 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
       path.buildYFastTrie();
     }
     for (Edge e: node.outgoingEdges) {
+      if (!e.isWildcardEdge()) {
         extendLadders(e.getToNode());
+      }
     }
   }
   
@@ -370,6 +417,31 @@ public abstract class SuffixTreeWithWildcards extends SuffixTree {
       return newRoot;
     }
     
+  }
+  
+  public static void main(String[] args) {
+    Text t = new Text("BANANABANANA", true);
+    SuffixTreeWithCPD.Builder suffixTreeBuilder = new SuffixTreeWithCPD.Builder(t, 1);
+    SuffixTreeWithCPD st = suffixTreeBuilder.build();
+    st.printTree();
+    System.out.println(st.eulerTour(0, st.root));
+    AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
+    AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
+    AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
+    AlphabetCharacter D = new AlphabetCharacter(new Character('$'));
+    AlphabetCharacter S = new AlphabetCharacter(new Character('*'));
+    Node NA = st.root.follow(S).getToNode().follow(A).getToNode().follow(N).getToNode().follow(N).getToNode();
+    Node BANANA = st.root.follow(S).getToNode().follow(A).getToNode().follow(N).getToNode().follow(N).getToNode().follow(B).getToNode();
+    //Node n2 = st.root.follow(A).getToNode().follow(N).getToNode().follow(N).getToNode().follow(B).getToNode().follow(B).getToNode().follow(B).getToNode();
+    //Text t = new Text("ANAF", false);
+    //Pair<Node, Integer> p = st.highestOverlapPoint(new TextSubstring(t, 0, t.getSize()));
+    //System.out.println(st.LCA(n1, n2));
+    //System.out.println(st.root.maxHeight);
+    //System.out.println(st.MA(n2, 0));
+    //System.out.println(st.eulerTour());
+    System.out.println(NA.follow(B).getFromNode() == NA);
+    System.out.println(BANANA);
+    System.out.println(BANANA.incomingEdge.getFromNode() == NA);
   }
   
 }

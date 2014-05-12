@@ -31,6 +31,9 @@ public class Path {
    * Add a node to the end of the path. This node must be a child of the previous end node in the path.
    */
   protected int addNode(Node node) {
+    System.out.println(nodes);
+    System.out.println(order);
+    System.out.println(node);
     if (order.size() == 0) {
       nodes.put(node.maxHeight, node);
       order.addLast(node.maxHeight);
@@ -38,6 +41,8 @@ public class Path {
     } else {
       int lastHeight = order.peekLast();
       Node last = nodes.get(lastHeight);
+      System.out.println(node.incomingEdge.getFromNode());
+      System.out.println(last);
       if (node.incomingEdge.getFromNode() == last) {
         int height = lastHeight - node.incomingEdge.getLength();
         nodes.put(height, node);
