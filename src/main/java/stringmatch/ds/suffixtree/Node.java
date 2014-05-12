@@ -23,7 +23,11 @@ public class Node {
   protected Edge centroidEdge;
   protected boolean isLeaf;
   protected int leafOffsetIndex;
+  
+  // Stores where the leaf falls in lexicographic order, but
+  // stores the value DOUBLED.
   protected int leafLexicographicIndex;
+  
   protected int LCAIndex;
   protected int maxHeight;
   protected Edge longPathEdge;
@@ -168,7 +172,7 @@ public class Node {
       } else {
         int offset = outgoingEdge.getTextSubstring().getText().getLength() - 
             (height + outgoingEdgeHeight);
-        Node leaf = new Node(outgoingEdge, true, offset, leafCount[0]);
+        Node leaf = new Node(outgoingEdge, true, offset, 2*leafCount[0]);
         outgoingEdge.setToNode(leaf);
         leafCount[0]++;
       }
