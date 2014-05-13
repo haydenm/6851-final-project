@@ -507,10 +507,11 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     }
     int jump = (int) Math.pow(2, Math.floor(log2(k)));
     Pair<Node, Integer> res = MATable.get(node).get(jump);
-    int diff = res.getLeft().maxHeight - node.maxHeight;
+    int diff = node.depthInSubtree - res.getLeft().depthInSubtree;
     // We've already made it up at least k
     if (diff > k) {
-      return new Pair<Node, Integer>(res.getLeft(), res.getRight() - (jump - k));
+      throw new RuntimeException("Something may be wrong with MA");
+      //return new Pair<Node, Integer>(res.getLeft(), res.getRight() - (jump - k));
     // Otherwise we need to look up in a ladder
     } else {
       Path ladder = res.getLeft().ladder.getRight();
@@ -576,13 +577,15 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       }
       // Check along centroid path
       Edge e = prev.getLeft().centroidEdge;
-      Pair<Node, Integer> next = new Pair<Node, Integer>(e.getToNode(), 1 - e.getLength());
-      Pair<Node, Integer> res2 = slowUnrootedLCP(subQueries.get(i), next);
-      if (res2 != null) {
-        if (subQueries.size() > i + 1) {
-          matches.addAll(slowSmartQuery(subQueries, i + 1, res2));
-        } else {
-          matches.add(res2);
+      if (e != null) {
+        Pair<Node, Integer> next = new Pair<Node, Integer>(e.getToNode(), 1 - e.getLength());
+        Pair<Node, Integer> res2 = slowUnrootedLCP(subQueries.get(i), next);
+        if (res2 != null) {
+          if (subQueries.size() > i + 1) {
+            matches.addAll(slowSmartQuery(subQueries, i + 1, res2));
+          } else {
+            matches.add(res2);
+          }
         }
       }
     } else {

@@ -18,7 +18,6 @@ import stringmatch.ds.util.Pair;
 public class SuffixTreeWithCPDTest {
 
   @Test
-  @Ignore
   public void testBanana() {
     SuffixTreeWithCPD.Builder suffixTreeBuilder = new SuffixTreeWithCPD.Builder(new Text("BANANABANANA", true), 2);
     SuffixTreeWithCPD st = suffixTreeBuilder.build();
@@ -27,7 +26,6 @@ public class SuffixTreeWithCPDTest {
   }
   
   @Test
-  @Ignore
   public void testSuffixes() {
     String[] strs = new String[] {
         "BANANA",
@@ -312,7 +310,6 @@ public class SuffixTreeWithCPDTest {
     SuffixTreeWithCPD.Builder suffixTreeBuilder =
         new SuffixTreeWithCPD.Builder(new Text("BANANABANANA", true), 2);
     SuffixTreeWithCPD st = suffixTreeBuilder.build();
-    st.printTree();
     
     AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
     AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
@@ -479,4 +476,24 @@ public class SuffixTreeWithCPDTest {
     expected.add(new Pair<Node, Integer>(n, -20));
     assertEquals(expected, result);
   }
+  
+  @Test
+  public void testBiggerProblem() {
+    Text t = new Text("TORIESSTORIESYOUKNOWHITHSTORIESIMEAN", true);
+    SuffixTreeWithCPD.Builder suffixTreeBuilder =
+        new SuffixTreeWithCPD.Builder(t, 1);
+      SuffixTreeWithCPD st = suffixTreeBuilder.build();
+      
+      AlphabetCharacter T = new AlphabetCharacter(new Character('T'));
+      AlphabetCharacter O = new AlphabetCharacter(new Character('O'));
+      
+      Text p = new Text("TOR*ES", false);
+      List<Pair<Node, Integer>> result = st.smartQuery(p);
+      Node n = st.root.follow(T).getToNode().follow(O).getToNode();
+      List<Pair<Node, Integer>> expected = new ArrayList<Pair<Node, Integer>>();
+      expected.add(new Pair<Node, Integer>(n, 0));
+      assertEquals(expected, result);
+      
+  }
+  
 }
