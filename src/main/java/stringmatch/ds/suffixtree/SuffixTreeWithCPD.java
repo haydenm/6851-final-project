@@ -156,35 +156,39 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
    * Get the leaf corresponding to the suffix with the most overlap with p.
    * Return that leaf node and also the length of the overlap.
    */
-  protected Pair<Node, Integer> highestOverlapLeaf(Text p) {
+  protected Pair<Node, Pair<Integer, Boolean>> highestOverlapLeaf(Text p) {
     Pair<Node, Integer> hop = highestOverlapPoint(p);
     Text overlap = constructHighestOverlap(hop);
     int h = overlap.getLength();
+    boolean pred;
     Node node;
     if (h == p.getLength()) {
       // Reached end of pattern along path
       node = hop.getLeft().leftMost;
+      pred = false;
     } else if (hop.getRight() == 0 && p.getLength() > h) {
       // Pattern diverged from a node
       node = hop.getLeft().followPrevious(p.getCharAtIndex(h)).getToNode().rightMost;
+      pred = true;
     } else if (hop.getRight() != 0 && p.getLength() > h) {
       // Pattern diverged along an edge
       Edge e = hop.getLeft().incomingEdge;
       AlphabetCharacter nextOnEdge = e.getCharAt(e.getLength() + hop.getRight());
       AlphabetCharacter nextInPattern = p.getCharAtIndex(h);
-      System.out.println(nextInPattern);
       if (nextInPattern.compareTo(nextOnEdge) > 0) {
-        System.out.println(hop.getLeft());
         node = hop.getLeft().rightMost;
+        pred = true;
       } else if (nextInPattern.compareTo(nextOnEdge) < 0) {
         node = hop.getLeft().leftMost;
+        pred = false;
       } else {
         throw new RuntimeException("Something wrong with highest overlap leaf");
       }
     } else {
       throw new RuntimeException("Something wrong with highest overlap leaf");
     }
-    return new Pair<Node, Integer>(node, h);
+    Pair<Integer, Boolean> info = new Pair<Integer, Boolean>(h, pred);
+    return new Pair<Node, Pair<Integer, Boolean>>(node, info);
   }
   
   protected Text constructHighestOverlap(Pair<Node, Integer> highestOverlapPoint) {
@@ -522,8 +526,6 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     } else {
       // Just check along current path
       Pair<Node, Integer> next = new Pair<Node, Integer>(prev.getLeft(), prev.getRight() + 1);
-      System.out.println("NEXT");
-      System.out.println(next);
       Pair<Node, Integer> res = slowUnrootedLCP(subQueries.get(i), next);
       if (res != null) {
         if (subQueries.size() > i + 1) {
@@ -540,19 +542,52 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     return query(p);
   }
   
-  /*public Pair<Node, Integer> rootedLCP(Text p, Pair<Node, Integer> highestOverlapPoint, Text hos) {
-    //Pair<Node, Integer> hop = highestOverlapPoint(p);
-    //Text hos = constructHighestOverlap(hop);
-    int i = highestOverlapPoint.getLeft().leafLexicographicIndex;
-    Text t = highestOverlapPoint.getLeft().incomingEdge.getTextSubstring().getText();
-    int pIndex;
-    if (hos.compareTo(p) > 0) {
-      pIndex = i - 1;
+  public Pair<Node, Integer> rootedLCP(Text p, int queryIndex, int overlapHeight, Node ssp, SuffixTreeWithCPS S) {
+    if (leafLexicographicIndices.hasKey(queryIndex)) {
+      throw new RuntimeException("Query index in predecessor");
+    }
+    Pair<Integer, Node> pred = leafLexicographicIndices.predecessor(queryIndex);
+    Pair<Integer, Node> succ = leafLexicographicIndices.successor(queryIndex);
+    
+    if (pred == null && succ == null) {
+      throw new RuntimeException("Predecessor and Successor both null");
+    }
+    
+    //Node lca = LCA(pred.getRight(), succ.getRight());
+    
+    // Compute h_p
+    int hp;
+    if (pred != null) {
+      Node predInS = pred.getRight(); // TODO
+      Node hpNode = S.LCA(predInS, ssp);
+      hp = hpNode.depth;
     } else {
-      pIndex = i + 1;
+      hp = 0;
+    }
+    
+    // Compute h_u
+    int hu;
+    if (succ != null) {
+      Node succInS = succ.getRight(); //TODO
+      Node huNode = S.LCA(succInS, ssp);
+      hu = huNode.depth;
+    } else {
+      hu = 0;
+    }
+    
+    if (overlapHeight != Math.max(hp, hu) && succ != null && pred != null) {
+      throw new RuntimeException("NOT EQUAL TO SUCCESSOR OR PREDECESSOR");
+    }
+    
+    if (overlapHeight == hp) {
+      int lenPred = pred.getRight().depth;
+      return MA(pred.getRight(), lenPred - hp);
+    } else if (overlapHeight == hu) {
+      int lenSucc = succ.getRight().depth;
+      return MA(succ.getRight(), lenSucc - hu);
     }
     return null;
-  }*/
+  }
   
   public Pair<Node, Integer> slowUnrootedLCP(Text p, Pair<Node, Integer> start) {
     Node node = start.getLeft();
@@ -603,7 +638,6 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     Pair<Node, Integer> start = new Pair<Node, Integer>(n1, -4);
     for (Pair<Node, Integer> p: st.smartQuery(new Text("A", false))) {
       st.printNode(p.getLeft());
-      System.out.println(p.getRight());
     }
     System.out.println("TESTA".compareTo("TEST$"));
     System.out.println(n1.followLeft());

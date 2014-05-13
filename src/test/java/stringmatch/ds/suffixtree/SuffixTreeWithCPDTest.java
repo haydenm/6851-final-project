@@ -205,4 +205,91 @@ public class SuffixTreeWithCPDTest {
     assertEquals(expected, result);
   }
   
+  @Test
+  public void testHighestOverlapLeaf() {
+    SuffixTreeWithCPD.Builder suffixTreeBuilder =
+        new SuffixTreeWithCPD.Builder(new Text("BANANABANANA", true), 2);
+    SuffixTreeWithCPD st = suffixTreeBuilder.build();
+    
+    AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
+    AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
+    AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
+    AlphabetCharacter D = new AlphabetCharacter(new Character('$'));
+    AlphabetCharacter S = new AlphabetCharacter(new Character('*'));
+    
+    Text t = new Text("BAN", false);
+    Node n = st.root.follow(B).getToNode().follow(D).getToNode();
+    Pair<Node, Pair<Integer, Boolean>> expected =
+        new Pair<Node, Pair<Integer, Boolean>>(n,
+            new Pair<Integer, Boolean>(3, false));
+    Pair<Node, Pair<Integer, Boolean>> result = st.highestOverlapLeaf(t);
+    assertEquals(expected, result);
+    
+    t = new Text("NA", false);
+    n = st.root.follow(N).getToNode().follow(D).getToNode();
+    expected = new Pair<Node, Pair<Integer, Boolean>>(n,
+            new Pair<Integer, Boolean>(2, false));
+    result = st.highestOverlapLeaf(t);
+    assertEquals(expected, result);
+    
+    t = new Text("ANAP", false);
+    n = st.root.follow(A).getToNode().follow(N).getToNode().follow(N).getToNode().follow(B).getToNode();
+    expected = new Pair<Node, Pair<Integer, Boolean>>(n,
+        new Pair<Integer, Boolean>(3, true));
+    result = st.highestOverlapLeaf(t);
+    assertEquals(expected, result);
+    
+    t = new Text("BANANABAA", false);
+    n = st.root.follow(B).getToNode().follow(B).getToNode();
+    expected = new Pair<Node, Pair<Integer, Boolean>>(n,
+        new Pair<Integer, Boolean>(8, false));
+    result = st.highestOverlapLeaf(t);
+    assertEquals(expected, result);
+    
+    t = new Text("ANP", false);
+    n = st.root.follow(A).getToNode().follow(N).getToNode().follow(N).getToNode().follow(B).getToNode();
+    expected = new Pair<Node, Pair<Integer, Boolean>>(n,
+        new Pair<Integer, Boolean>(2, true));
+    result = st.highestOverlapLeaf(t);
+    assertEquals(expected, result);
+  }
+  
+  @Test
+  public void testRootedLCP() {
+    SuffixTreeWithCPD.Builder suffixTreeBuilder =
+        new SuffixTreeWithCPD.Builder(new Text("BANANABANANA", true), 2);
+    SuffixTreeWithCPD st = suffixTreeBuilder.build();
+    
+    AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
+    AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
+    AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
+    AlphabetCharacter D = new AlphabetCharacter(new Character('$'));
+    AlphabetCharacter S = new AlphabetCharacter(new Character('*'));
+    
+    Text t = new Text("BAN", false);
+    Node n = st.root.follow(B).getToNode();
+    Pair<Node, Integer> expected = new Pair<Node, Integer>(n, -3);
+    Pair<Node, Integer> result = st.slowRootedLCP(t);
+    assertEquals(expected, result);
+    
+    SuffixTreeWithCPD s = (SuffixTreeWithCPD) ((WildcardEdge) st.root.follow(S)).wildcardTree;
+    t = new Text("ANAB", false);
+    n = s.root.follow(A).getToNode().follow(N).getToNode().follow(B).getToNode();
+    expected = new Pair<Node, Integer>(n, -6);
+    result = s.slowRootedLCP(t);
+    assertEquals(expected, result);
+    
+    t = new Text("T", false);
+    expected = null;
+    result = s.slowRootedLCP(t);
+    assertEquals(expected, result);
+    
+    s = (SuffixTreeWithCPD) ((WildcardEdge) s.root.follow(A).getToNode().follow(N).getToNode().follow(S)).wildcardTree;
+    t = new Text("ANA", false);
+    n = s.root.follow(A).getToNode();
+    expected = new Pair<Node, Integer>(n, -3);
+    result = s.slowRootedLCP(t);
+    assertEquals(expected, result);
+  }
+  
 }
