@@ -95,9 +95,16 @@ public class Path {
     steps = builder.buildFromPairs(keys);
   }
   
-  // The length of the path is the max height of the first node
+  // The length of the path is the max height of the first node plus the
+  // length of the incoming edge into that node
   public int getLength() {
-    return order.peekFirst();
+    int firstHeight = order.peekFirst();
+    Node first = nodes.get(firstHeight);
+    if (first.incomingEdge != null) {
+      return firstHeight + first.incomingEdge.getLength();
+    } else {
+      return firstHeight;
+    }
   }
   
   /*

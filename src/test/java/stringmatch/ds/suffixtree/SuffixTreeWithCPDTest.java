@@ -18,6 +18,7 @@ import stringmatch.ds.util.Pair;
 public class SuffixTreeWithCPDTest {
 
   @Test
+  @Ignore
   public void testBanana() {
     SuffixTreeWithCPD.Builder suffixTreeBuilder = new SuffixTreeWithCPD.Builder(new Text("BANANABANANA", true), 2);
     SuffixTreeWithCPD st = suffixTreeBuilder.build();
@@ -26,6 +27,7 @@ public class SuffixTreeWithCPDTest {
   }
   
   @Test
+  @Ignore
   public void testSuffixes() {
     String[] strs = new String[] {
         "BANANA",
@@ -446,5 +448,35 @@ public class SuffixTreeWithCPDTest {
     SuffixTreeWithCPD stWild = (SuffixTreeWithCPD)((WildcardEdge)st.root.follow(AlphabetCharacter.WILDCARD)).wildcardTree;
     Node n1 = stWild.root.follow(A).getToNode().follow(N).getToNode().follow(AlphabetCharacter.WILDCARD).getToNode().follow(A).getToNode();
     assertEquals(6, n1.depthInSubtree);
+  }
+  
+  @Test
+  public void testProblem() {
+    Text t = new Text("ALLRIGHTTHISISELISSAADAMSANDELISSAYOUVELIVEDINCHARLOTTEFORFIVEYEARSFIVEYEARSOKUMFIRSTTHINGIWANTTOAS", true);
+    SuffixTreeWithCPD.Builder suffixTreeBuilder =
+      new SuffixTreeWithCPD.Builder(t, 1);
+    SuffixTreeWithCPD st = suffixTreeBuilder.build();
+
+    AlphabetCharacter V = new AlphabetCharacter(new Character('V'));
+    AlphabetCharacter L = new AlphabetCharacter(new Character('L'));
+    AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
+    AlphabetCharacter S = new AlphabetCharacter(new Character('S'));
+    AlphabetCharacter I = new AlphabetCharacter(new Character('I'));
+    AlphabetCharacter Y = new AlphabetCharacter(new Character('Y'));
+    
+  
+    Text p = new Text("V*LIVEDINCHARLOTTEFORFIVEYEARSFIVEYEARSOKUMFIRSTTH", false);
+    List<Pair<Node, Integer>> result = st.smartQuery(p);
+    Node n = st.root.follow(V).getToNode().follow(L).getToNode();
+    List<Pair<Node, Integer>> expected = new ArrayList<Pair<Node, Integer>>();
+    expected.add(new Pair<Node, Integer>(n, -13));
+    assertEquals(expected, result);
+
+    p = new Text("*SSAYOUVELIVEDINCHARLOTTEFORFIVEYEARSFIVEYEARSOKUM", false);
+    result = st.smartQuery(p);
+    n = st.root.follow(I).getToNode().follow(S).getToNode().follow(S).getToNode().follow(Y).getToNode();
+    expected = new ArrayList<Pair<Node, Integer>>();
+    expected.add(new Pair<Node, Integer>(n, -20));
+    assertEquals(expected, result);
   }
 }
