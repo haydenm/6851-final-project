@@ -51,6 +51,27 @@ public class Text {
         text.subList(start, end)).build();
   }
   
+  public Text addEndCharIfNeeded() {
+    if (!getCharAtIndex(getLength() - 1).equals(AlphabetCharacter.END_CHAR))
+      text.add(AlphabetCharacter.END_CHAR);
+    return this;
+  }
+  
+  public boolean equalsIgnoreWildcards(Text o) {
+    if (getLength() != o.getLength())
+      return false;
+    
+    for (int i = 0; i < getLength(); i++) {
+      if (getCharAtIndex(i).equals(AlphabetCharacter.WILDCARD) ||
+          o.getCharAtIndex(i).equals(AlphabetCharacter.WILDCARD))
+        continue;
+      if (!getCharAtIndex(i).equals(o.getCharAtIndex(i)))
+        return false;
+    }
+    
+    return true;
+  }
+  
   public boolean equals(Object obj) {
     if (obj instanceof Text)
       return ((Text)obj).text.equals(text);
@@ -75,7 +96,7 @@ public class Text {
   }
   
   public static class Builder {
-    private final List<AlphabetCharacter> text;
+    private List<AlphabetCharacter> text;
     
     public Builder() {
       text = new ArrayList<AlphabetCharacter>();
@@ -91,9 +112,26 @@ public class Text {
       return this;
     }
     
+    public Builder addString(String s) {
+      List<AlphabetCharacter> l = new ArrayList<AlphabetCharacter>();
+      for (Character c : s.toCharArray()) {
+        l.add(new AlphabetCharacter(c));
+      }
+      return addAlphabetCharacters(l);
+    }
+    
+    public int getCurrentSize() {
+      return text.size();
+    }
+    
+    public void cutToSize(int n) {
+      text = text.subList(0, Math.min(n, text.size()));
+    }
+    
     public Text build() {
       return new Text(this);
     }
+    
   }
   
   public int compareTo(Text other) {

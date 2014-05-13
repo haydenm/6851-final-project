@@ -21,11 +21,11 @@ public class SuffixTreeNaiveBigSpace extends SuffixTreeWithWildcards {
    * Returns the indices of all the matches for the query pattern p.
    */
   public List<Integer> queryForIndices(Text p) {
-    Node node = query(p).getLeft();
-    if (node == null)
+    Pair<Node, Integer> pair = query(p);
+    if (pair == null)
       return new ArrayList<Integer>();
     else
-      return node.getOffsetIndicesOfLeaves();
+      return pair.getLeft().getOffsetIndicesOfLeaves();
   }
   
   /*

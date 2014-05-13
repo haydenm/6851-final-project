@@ -1,7 +1,9 @@
 package stringmatch.ds.suffixtree;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
@@ -524,7 +526,17 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     return false;
   }
   
-  public List<Pair<Node, Integer>> slowSmartQuery(Text p) {
+  public List<Integer> slowSmartQueryIndices(Text p) {
+    List<Pair<Node, Integer>> nodes = slowSmartQuery(p);
+    Set<Integer> nodeIndices = new HashSet<Integer>();
+    for (Pair<Node, Integer> pair : nodes) {
+      Node node = pair.getLeft();
+      nodeIndices.addAll(node.getOffsetIndicesOfLeaves());
+    }
+    return new ArrayList<Integer>(nodeIndices);
+  }
+  
+  protected List<Pair<Node, Integer>> slowSmartQuery(Text p) {
     List<Text> subQueries = breakQuery(p);
     Text query = subQueries.get(0);
     Pair<Node, Integer> prev = slowRootedLCP(query);
@@ -579,7 +591,17 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     return matches;
   }
   
-  public List<Pair<Node, Integer>> smartQuery(Text p) {
+  public List<Integer> smartQueryIndices(Text p) {
+    List<Pair<Node, Integer>> nodes = smartQuery(p);
+    Set<Integer> nodeIndices = new HashSet<Integer>();
+    for (Pair<Node, Integer> pair : nodes) {
+      Node node = pair.getLeft();
+      nodeIndices.addAll(node.getOffsetIndicesOfLeaves());
+    }
+    return new ArrayList<Integer>(nodeIndices);
+  }
+  
+  protected List<Pair<Node, Integer>> smartQuery(Text p) {
     List<Text> subQueries = breakQuery(p);
     List<Integer> queryIndices = new ArrayList<Integer>();
     List<Integer> overlapHeights = new ArrayList<Integer>();
@@ -707,9 +729,9 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     }
 
    
-    if (overlapHeight > Math.max(hp, hu) && succ != null & pred != null) {
-      throw new RuntimeException("NOT EQUAL TO SUCCESSOR OR PREDECESSOR");
-    }    
+    //if (overlapHeight > Math.max(hp, hu) && succ != null & pred != null) {
+    //  throw new RuntimeException("NOT EQUAL TO SUCCESSOR OR PREDECESSOR");
+    //}    
     
     if (hp > hu || succ == null) {
       int lenPred = pred.getRight().depthInSubtree;

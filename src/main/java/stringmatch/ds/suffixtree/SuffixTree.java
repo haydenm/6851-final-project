@@ -2,8 +2,10 @@ package stringmatch.ds.suffixtree;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
@@ -122,15 +124,24 @@ public class SuffixTree {
     System.out.println(st.query(new Text("ANABA", false), 1, st.root));
   }
 
+  public List<Integer> naiveWildcardQueryIndices(Text p) {
+    List<Node> nodes = naiveWildcardQuery(p);
+    Set<Integer> nodeIndices = new HashSet<Integer>();
+    for (Node node : nodes) {
+      nodeIndices.addAll(node.getOffsetIndicesOfLeaves());
+    }
+    return new ArrayList<Integer>(nodeIndices);
+  }
+  
   /*
    * Returns the node corresponding to the longest common prefix of p with the
    * suffix tree, or null if there is no such prefix. Allows wildcards.
    */
-  public List<Node> naiveWildcardQuery(Text p) {
+  protected List<Node> naiveWildcardQuery(Text p) {
     return naiveWildcardQuery(p, 0, root);
   }
 
-  private List<Node> naiveWildcardQuery(Text p, int start, Node current) {
+  protected List<Node> naiveWildcardQuery(Text p, int start, Node current) {
     List<Node> results = new ArrayList<Node>();
     if (start >= p.getSize()) {
       results.add(current);
@@ -370,7 +381,7 @@ public class SuffixTree {
       }
     }
 
-    protected SuffixTree build() {
+    public SuffixTree build() {
       processPrefixes();
       //root.removeEndCharEdge();
       root.sortEdgesAndPutNodesAtLeaves(0, new int[] { 0 });
