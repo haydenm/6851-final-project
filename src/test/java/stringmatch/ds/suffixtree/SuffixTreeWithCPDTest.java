@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import stringmatch.ds.text.AlphabetCharacter;
@@ -153,7 +154,7 @@ public class SuffixTreeWithCPDTest {
   }
   
   @Test
-  public void testSlowSmartQuery() {
+  public void testSmartQuery() {
     SuffixTreeWithCPD.Builder suffixTreeBuilder =
         new SuffixTreeWithCPD.Builder(new Text("BANANABANANA", true), 2);
     SuffixTreeWithCPD st = suffixTreeBuilder.build();
@@ -255,6 +256,7 @@ public class SuffixTreeWithCPDTest {
     assertEquals(expected, result);
   }
 
+  @Test
   public void testCorrespondingNodeInSBanana() {
     SuffixTreeWithCPD.Builder suffixTreeBuilder =
         new SuffixTreeWithCPD.Builder(new Text("BANANA", true), 1);
@@ -270,6 +272,93 @@ public class SuffixTreeWithCPDTest {
     Node n2 = st.root.follow(A).getToNode().follow(AlphabetCharacter.END_CHAR).getToNode();
     assertEquals(n2, stWild.getCorrespondingNodeInS(n1));
 
+  }
+  
+  @Test
+  public void easyTestRootedLCP() {
+    SuffixTreeWithCPD.Builder suffixTreeBuilder =
+        new SuffixTreeWithCPD.Builder(new Text("BANANA", true), 1);
+    SuffixTreeWithCPD st = suffixTreeBuilder.build();
+    
+    AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
+    AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
+    AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
+    AlphabetCharacter D = new AlphabetCharacter(new Character('$'));
+    AlphabetCharacter S = new AlphabetCharacter(new Character('*'));
+    
+    Text t = new Text("BAN", false);
+    int queryIndex = 7;
+    int overlapHeight = 3;
+    Node ssp = st.root.follow(B).getToNode();
+    Node n = st.root.follow(B).getToNode();
+    Pair<Node, Integer> expected = new Pair<Node, Integer>(n, -4);
+    Pair<Node, Integer> result = st.rootedLCP(queryIndex, overlapHeight, ssp, st, st.root);
+    assertEquals(expected, result);
+    
+    t = new Text("ANA", false);
+    queryIndex = 3;
+    overlapHeight = 3;
+    ssp = st.root.follow(A).getToNode().follow(N).getToNode().follow(D).getToNode();
+    n = st.root.follow(A).getToNode().follow(N).getToNode();
+    expected = new Pair<Node, Integer>(n, 0);
+    result = st.rootedLCP(queryIndex, overlapHeight, ssp, st, st.root);
+    assertEquals(expected, result);
+  }
+  
+  @Test
+  public void hardTestRootedLCP() {
+    SuffixTreeWithCPD.Builder suffixTreeBuilder =
+        new SuffixTreeWithCPD.Builder(new Text("BANANABANANA", true), 2);
+    SuffixTreeWithCPD st = suffixTreeBuilder.build();
+    st.printTree();
+    
+    AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
+    AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
+    AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
+    AlphabetCharacter D = new AlphabetCharacter(new Character('$'));
+    AlphabetCharacter S = new AlphabetCharacter(new Character('*'));
+    
+    Text t = new Text("BAN", false);
+    int queryIndex = 13;
+    int overlapHeight = 3;
+    Node ssp = st.root.follow(B).getToNode();
+    Node n = st.root.follow(B).getToNode();
+    Pair<Node, Integer> expected = new Pair<Node, Integer>(n, -3);
+    Pair<Node, Integer> result = st.rootedLCP(queryIndex, overlapHeight, ssp, st, st.root);
+    assertEquals(expected, result);
+    
+    SuffixTreeWithCPD s = (SuffixTreeWithCPD) ((WildcardEdge) st.root.follow(S)).wildcardTree;
+    t = new Text("ANAB", false);
+    queryIndex = 7;
+    overlapHeight = 4;
+    ssp = st.root.follow(A).getToNode().follow(N).getToNode().follow(B).getToNode();
+    n = s.root.follow(A).getToNode().follow(N).getToNode().follow(B).getToNode();
+    expected = new Pair<Node, Integer>(n, -6);
+    result = s.rootedLCP(queryIndex, overlapHeight, ssp, st, st.root);
+    assertEquals(expected, result);
+    
+    t = new Text("T", false);
+    queryIndex = 25;
+    overlapHeight = 0;
+    ssp = st.root;
+    expected = new Pair<Node, Integer>(s.root, 0);
+    result = s.rootedLCP(queryIndex, overlapHeight, ssp, st, st.root);
+    assertEquals(expected, result);
+    
+    t = new Text("NANA", false);
+    queryIndex = 19;
+    overlapHeight = 4;
+    ssp = st.root.follow(N).getToNode().follow(N).getToNode().follow(D).getToNode();
+    expected = new Pair<Node, Integer>(s.root, 0);
+    result = s.rootedLCP(queryIndex, overlapHeight, ssp, st, st.root);
+    assertEquals(expected, result);
+    
+    s = (SuffixTreeWithCPD) ((WildcardEdge) s.root.follow(A).getToNode().follow(N).getToNode().follow(S)).wildcardTree;
+    t = new Text("ANA", false);
+    n = s.root.follow(A).getToNode();
+    expected = new Pair<Node, Integer>(n, -3);
+    result = s.slowRootedLCP(t);
+    assertEquals(expected, result);
   }
   
   @Test
@@ -358,5 +447,4 @@ public class SuffixTreeWithCPDTest {
     Node n1 = stWild.root.follow(A).getToNode().follow(N).getToNode().follow(AlphabetCharacter.WILDCARD).getToNode().follow(A).getToNode();
     assertEquals(6, n1.depthInSubtree);
   }
-  
 }

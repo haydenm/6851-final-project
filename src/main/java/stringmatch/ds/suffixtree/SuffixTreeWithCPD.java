@@ -107,6 +107,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     buildLongPaths();
     extendLadders();
     setLeftAndRightLeaves();
+    setRootPointers();
   }
   
   private void setLeftAndRightLeaves() {
@@ -125,6 +126,23 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     } else {
       n.leftMost = n;
       n.rightMost = n;
+    }
+  }
+  
+  private void setRootPointers() {
+    root.rootPointer = root;
+    setRootPointers(root);
+  }
+  
+  private void setRootPointers(Node n) {
+    if (!n.isLeaf()) {
+      for (Edge e: n.outgoingEdges) {
+        if (!e.isWildcardEdge()) {
+          Node child = e.getToNode();
+          child.rootPointer = n.rootPointer;
+          setRootPointers(child);
+        }
+      }
     }
   }
   
@@ -214,7 +232,9 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     List<String> strs = new ArrayList<String>();
     Node current = highestOverlapPoint.getLeft();
     Edge e = current.incomingEdge;
-    strs.add(e.toString().substring(0, e.getLength() + highestOverlapPoint.getRight()));
+    if (e != null) {
+      strs.add(e.toString().substring(0, e.getLength() + highestOverlapPoint.getRight()));
+    }
     while (e != null) {
       current = e.getFromNode();
       e = current.incomingEdge;
@@ -368,16 +388,18 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       int jump = (int) Math.pow(2, i);
       int k = 0;
       Node current = node;
-        while (k < jump && node.incomingEdge != null) {
-          Edge edge = current.incomingEdge;
-          if (edge != null) {
-            k += current.incomingEdge.getTextSubstring().getLength();
+      while (k < jump && current.incomingEdge != null) {
+        Edge edge = current.incomingEdge;
+        if (edge != null) {
+          k += current.incomingEdge.getTextSubstring().getLength();
+          if (k <= jump) {
             current = current.incomingEdge.getFromNode();
-          } else {
-            break;
           }
+        } else {
+          break;
         }
-      int diff = Math.max(0, k - jump);
+      }
+      int diff = Math.min(0, jump - k);
       inner.put(jump, new Pair<Node, Integer>(current, diff));
     }
     return inner;
@@ -465,7 +487,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
   /*
    * Compute the measured ancestor of a node. Returns a pair containing either the resulting node
    * (if the measured ancestor is a node) or the next node above the edge where the measured ancestor
-   * was. Also contains an interger corresponding to the distance below the node where the measured
+   * was. Also contains an integer corresponding to the distance below the node where the measured
    * ancestor can be found. 
    */
   public Pair<Node, Integer> MA(Node node, int k) {
@@ -477,7 +499,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     int diff = res.getLeft().maxHeight - node.maxHeight;
     // We've already made it up at least k
     if (diff > k) {
-      return new Pair<Node, Integer>(res.getLeft(), res.getRight() - (k - jump));
+      return new Pair<Node, Integer>(res.getLeft(), res.getRight() - (jump - k));
     // Otherwise we need to look up in a ladder
     } else {
       Path ladder = res.getLeft().ladder.getRight();
@@ -502,12 +524,12 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     return false;
   }
   
-  public List<Pair<Node, Integer>> smartQuery(Text p) {
+  public List<Pair<Node, Integer>> slowSmartQuery(Text p) {
     List<Text> subQueries = breakQuery(p);
     Text query = subQueries.get(0);
     Pair<Node, Integer> prev = slowRootedLCP(query);
     if (subQueries.size() > 1) {
-      return smartQuery(subQueries, 1, prev);
+      return slowSmartQuery(subQueries, 1, prev);
     } else {
       List<Pair<Node, Integer>> matches = new ArrayList<Pair<Node, Integer>>();
       matches.add(prev);
@@ -515,7 +537,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     }
   }
   
-  public List<Pair<Node, Integer>> smartQuery(List<Text> subQueries, int i, Pair<Node, Integer> prev) {
+  public List<Pair<Node, Integer>> slowSmartQuery(List<Text> subQueries, int i, Pair<Node, Integer> prev) {
     List<Pair<Node, Integer>> matches = new ArrayList<Pair<Node, Integer>>();
     if (prev.getRight() == 0) {
       // Check wildcard subtree
@@ -525,7 +547,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
         Pair<Node, Integer> res1 = w.slowRootedLCP(subQueries.get(i));
         if (res1 != null) {
           if (subQueries.size() > i + 1) {
-            matches.addAll(w.smartQuery(subQueries, i + 1, res1));
+            matches.addAll(w.slowSmartQuery(subQueries, i + 1, res1));
           } else {
             matches.add(res1);
           }
@@ -537,7 +559,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       Pair<Node, Integer> res2 = slowUnrootedLCP(subQueries.get(i), next);
       if (res2 != null) {
         if (subQueries.size() > i + 1) {
-          matches.addAll(smartQuery(subQueries, i + 1, res2));
+          matches.addAll(slowSmartQuery(subQueries, i + 1, res2));
         } else {
           matches.add(res2);
         }
@@ -548,9 +570,96 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       Pair<Node, Integer> res = slowUnrootedLCP(subQueries.get(i), next);
       if (res != null) {
         if (subQueries.size() > i + 1) {
-          matches.addAll(smartQuery(subQueries, i + 1, res));
+          matches.addAll(slowSmartQuery(subQueries, i + 1, res));
         } else {
           matches.add(res);
+        }
+      }
+    }
+    return matches;
+  }
+  
+  public List<Pair<Node, Integer>> smartQuery(Text p) {
+    List<Text> subQueries = breakQuery(p);
+    List<Integer> queryIndices = new ArrayList<Integer>();
+    List<Integer> overlapHeights = new ArrayList<Integer>();
+    List<Node> ssps = new ArrayList<Node>();
+    for (Text query: subQueries) {
+      Pair<Node, Pair<Integer, Boolean>> overlap = highestOverlapLeaf(query);
+      Node ssp = overlap.getLeft();
+      int overlapHeight = overlap.getRight().getLeft();
+      boolean pred = overlap.getRight().getRight();
+      int queryIndex;
+      if (pred) {
+        queryIndex = ssp.leafLexicographicIndexInS + 1;
+      } else {
+        queryIndex = ssp.leafLexicographicIndexInS - 1;
+      }
+      if (query.getSize() == 0) {
+        queryIndex = -1;
+      }
+      queryIndices.add(queryIndex);
+      overlapHeights.add(overlapHeight);
+      ssps.add(ssp);
+    }
+    Text query = subQueries.get(0);
+    Pair<Node, Integer> prev = rootedLCP(queryIndices.get(0), overlapHeights.get(0), ssps.get(0), this, root);
+    if (subQueries.size() > 1) {
+      return smartQuery(subQueries, queryIndices, overlapHeights, ssps, 1, prev, this);
+    } else {
+      List<Pair<Node, Integer>> matches = new ArrayList<Pair<Node, Integer>>();
+      matches.add(prev);
+      return matches;
+    }
+  }
+  
+  public List<Pair<Node, Integer>> smartQuery(List<Text> subQueries,
+                                              List<Integer> queryIndices,
+                                              List<Integer> overlapHeights,
+                                              List<Node> ssps,
+                                              int i,
+                                              Pair<Node, Integer> prev,
+                                              SuffixTreeWithCPD S) {
+    List<Pair<Node, Integer>> matches = new ArrayList<Pair<Node, Integer>>();
+    if (prev.getRight() == 0) {
+      // Check wildcard subtree
+      WildcardEdge wce =  (WildcardEdge) prev.getLeft().follow(AlphabetCharacter.WILDCARD);
+      if (wce != null) {
+        SuffixTreeWithCPD w = (SuffixTreeWithCPD) wce.wildcardTree;
+        Pair<Node, Integer> res1 = w.rootedLCP(queryIndices.get(i), overlapHeights.get(i), ssps.get(i), S, wce.getToNode());
+        if (res1 != null) {
+          if (res1.getLeft().depthInSubtree + res1.getRight() == subQueries.get(i).getSize()) {
+            if (subQueries.size() > i + 1) {
+              matches.addAll(w.smartQuery(subQueries, queryIndices, overlapHeights, ssps, i + 1, res1, S));
+            } else {
+              matches.add(res1);
+            }
+          }
+        }
+      }
+      // Check along centroid path
+      Edge e = prev.getLeft().centroidEdge;
+      Pair<Node, Integer> next = new Pair<Node, Integer>(e.getToNode(), 1 - e.getLength());
+      Pair<Node, Integer> res2 = slowUnrootedLCP(subQueries.get(i), next);
+      if (res2 != null) {
+        if (res2.getLeft().depthInSubtree + res2.getRight() - prev.getLeft().depthInSubtree - 1 == subQueries.get(i).getSize())
+          if (subQueries.size() > i + 1) {
+            matches.addAll(smartQuery(subQueries, queryIndices, overlapHeights, ssps, i + 1, res2, S));
+          } else {
+            matches.add(res2);
+        }
+      }
+    } else {
+      // Just check along current path
+      Pair<Node, Integer> next = new Pair<Node, Integer>(prev.getLeft(), prev.getRight() + 1);
+      Pair<Node, Integer> res = slowUnrootedLCP(subQueries.get(i), next);
+      if (res != null) {
+        if (res.getLeft().depthInSubtree + res.getRight() - (prev.getLeft().depthInSubtree + prev.getRight() + 1) == subQueries.get(i).getSize()) {
+          if (subQueries.size() > i + 1) {
+            matches.addAll(smartQuery(subQueries, queryIndices, overlapHeights, ssps, i + 1, res, S));
+          } else {
+            matches.add(res);
+          }
         }
       }
     }
@@ -561,7 +670,10 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     return query(p);
   }
   
-  public Pair<Node, Integer> rootedLCP(Text p, int queryIndex, int overlapHeight, Node ssp, SuffixTreeWithCPS S) {
+  public Pair<Node, Integer> rootedLCP(int queryIndex, int overlapHeight, Node ssp, SuffixTreeWithCPD S, Node prevNode) {
+    if (queryIndex == -1) {
+      return new Pair<Node, Integer>(prevNode.rootPointer, 0);
+    }
     if (leafLexicographicIndices.hasKey(queryIndex)) {
       throw new RuntimeException("Query index in predecessor");
     }
@@ -577,9 +689,9 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     // Compute h_p
     int hp;
     if (pred != null) {
-      Node predInS = pred.getRight(); // TODO
+      Node predInS = getCorrespondingNodeInS(pred.getRight());
       Node hpNode = S.LCA(predInS, ssp);
-      hp = hpNode.depth;
+      hp = hpNode.depthInSubtree;
     } else {
       hp = 0;
     }
@@ -587,25 +699,27 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     // Compute h_u
     int hu;
     if (succ != null) {
-      Node succInS = succ.getRight(); //TODO
+      Node succInS = getCorrespondingNodeInS(succ.getRight());
       Node huNode = S.LCA(succInS, ssp);
-      hu = huNode.depth;
+      hu = huNode.depthInSubtree;
     } else {
       hu = 0;
     }
-    
-    if (overlapHeight != Math.max(hp, hu) && succ != null && pred != null) {
+
+   
+    if (overlapHeight > Math.max(hp, hu) && succ != null & pred != null) {
       throw new RuntimeException("NOT EQUAL TO SUCCESSOR OR PREDECESSOR");
-    }
+    }    
     
-    if (overlapHeight == hp) {
-      int lenPred = pred.getRight().depth;
-      return MA(pred.getRight(), lenPred - hp);
-    } else if (overlapHeight == hu) {
-      int lenSucc = succ.getRight().depth;
-      return MA(succ.getRight(), lenSucc - hu);
+    if (hp > hu || succ == null) {
+      int lenPred = pred.getRight().depthInSubtree;
+      int h = Math.min(overlapHeight, hp);
+      return MA(pred.getRight(), lenPred - h);
+    } else {
+      int lenSucc = succ.getRight().depthInSubtree;
+      int h = Math.min(overlapHeight, hu);
+      return MA(succ.getRight(), lenSucc - h);
     }
-    return null;
   }
   
   public Pair<Node, Integer> slowUnrootedLCP(Text p, Pair<Node, Integer> start) {
@@ -642,30 +756,6 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     }
     subQueries.add(new Text(p.toString().substring(start, start + len), false));
     return subQueries;
-  }
-  
-  public static void main(String[] args) {
-    Text t = new Text("BANANABANANA", true);
-    SuffixTreeWithCPD.Builder suffixTreeBuilder = new SuffixTreeWithCPD.Builder(t, 2);
-    SuffixTreeWithCPD st = suffixTreeBuilder.build();
-    st.printTree();
-    AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
-    AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
-    AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
-    AlphabetCharacter D = new AlphabetCharacter(new Character('A'));
-    Node n1 = st.root.follow(B).getToNode();
-    Pair<Node, Integer> start = new Pair<Node, Integer>(n1, -4);
-    for (Pair<Node, Integer> p: st.smartQuery(new Text("A", false))) {
-      st.printNode(p.getLeft());
-    }
-    System.out.println("TESTA".compareTo("TEST$"));
-    System.out.println(n1.followLeft());
-    Text p = new Text("ANQ", false);
-    Pair<Node, Integer> hop = st.highestOverlapPoint(p);
-    System.out.println(hop);
-    st.printNode(st.highestOverlapLeaf(p).getLeft());
-    //st.rootedLCP(new Text("TEST", false));
-    //System.out.println(SuffixTreeWithCPD.breakQuery(new Text("***TEST*AGAIN**TEST*", false)));
   }
   
   public static class Builder extends SuffixTreeWithWildcards.Builder {

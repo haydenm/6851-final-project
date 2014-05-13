@@ -60,6 +60,7 @@ public class Node {
   protected int maxHeight;
   protected Edge longPathEdge;
   protected Pair<Integer, Path> ladder;
+  protected Node rootPointer;
   
   /* Used for building! */
   protected Node suffixLink;
@@ -93,29 +94,6 @@ public class Node {
     LCAIndex = -1;
     maxHeight = -1;
   }
-  
-  /*protected Edge follow(Text p, int start) {
-	  for (Edge e: outgoingEdges) {
-		  boolean match = true;
-		  TextSubstring edgeSubstring = e.getTextSubstring();
-		  TextSubstring next = new TextSubstring(p, start, Math.min(edgeSubstring.getLength(), p.getLength() - start));
-		  String edgeString = edgeSubstring.toString();
-		  String nextString = next.toString();
-		  System.out.println(edgeString);
-		  System.out.println(nextString);
-		  for (int i = 0; i < Math.min(edgeSubstring.length, p.getLength() - start); i++) {
-			  System.out.println(edgeString.charAt(i));
-			  System.out.println(nextString.charAt(i));
-			  if (edgeString.charAt(i) != nextString.charAt(i)) {
-				  match = false;
-			  }
-		  }
-		  if (match) {
-			  return e;
-		  }
-	  }
-	return null;
-  }*/
   
   protected void removeEndCharEdge() {
     for (int i = 0; i < outgoingEdges.size(); i++) {

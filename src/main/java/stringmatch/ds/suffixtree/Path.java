@@ -110,13 +110,13 @@ public class Path {
     if (nodes.containsKey(goal)) {
       return new Pair<Node, Integer>(nodes.get(goal), 0);
     } else {
-      Pair<Integer, Object> s = steps.successor(goal);
-      Integer succ = s.getLeft();
-      if (succ == null) {
+      Pair<Integer, Object> p = steps.predecessor(goal);
+      Integer pred = p.getLeft();
+      if (pred == null) {
         throw new RuntimeException("A jump query in a ladder exceeded the height of the ladder");
       } else {
-        Node next = nodes.get(succ);
-        int offset = succ - goal;
+        Node next = nodes.get(pred);
+        int offset = pred - goal;
         return new Pair<Node, Integer>(next, offset);
       }
     }
