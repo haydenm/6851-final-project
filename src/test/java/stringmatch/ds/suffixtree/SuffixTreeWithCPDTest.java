@@ -205,4 +205,70 @@ public class SuffixTreeWithCPDTest {
     assertEquals(expected, result);
   }
   
+  @Test
+  public void testCorrespondingNodeInSBanana() {
+    SuffixTreeWithCPD.Builder suffixTreeBuilder =
+        new SuffixTreeWithCPD.Builder(new Text("BANANA", true), 1);
+    SuffixTreeWithCPD st = suffixTreeBuilder.build();
+    
+    AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
+    AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
+    AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
+    AlphabetCharacter S = new AlphabetCharacter(new Character('*'));
+    
+    SuffixTreeWithCPD stWild = (SuffixTreeWithCPD)((WildcardEdge)st.root.follow(AlphabetCharacter.WILDCARD)).wildcardTree;
+    Node n1 = stWild.root.follow(A).getToNode().follow(AlphabetCharacter.END_CHAR).getToNode();
+    Node n2 = st.root.follow(A).getToNode().follow(AlphabetCharacter.END_CHAR).getToNode();
+    assertEquals(n2, stWild.getCorrespondingNodeInS(n1));
+  }
+  
+  @Test
+  public void testNodeDepthBanana() {
+    SuffixTreeWithCPD.Builder suffixTreeBuilder =
+        new SuffixTreeWithCPD.Builder(new Text("BANANA", true), 1);
+    SuffixTreeWithCPD st = suffixTreeBuilder.build();
+    
+    AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
+    AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
+    AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
+    AlphabetCharacter S = new AlphabetCharacter(new Character('*'));
+    
+    SuffixTreeWithCPD stWild = (SuffixTreeWithCPD)((WildcardEdge)st.root.follow(AlphabetCharacter.WILDCARD)).wildcardTree;
+    Node n1 = stWild.root.follow(A).getToNode().follow(AlphabetCharacter.END_CHAR).getToNode();
+    assertEquals(2, n1.depthInSubtree);
+  }
+  
+  @Test
+  public void testCorrespondingNodeInSBananaBanana() {
+    SuffixTreeWithCPD.Builder suffixTreeBuilder =
+        new SuffixTreeWithCPD.Builder(new Text("BANANABANANA", true), 2);
+    SuffixTreeWithCPD st = suffixTreeBuilder.build();
+    
+    AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
+    AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
+    AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
+    AlphabetCharacter S = new AlphabetCharacter(new Character('*'));
+    
+    SuffixTreeWithCPD stWild = (SuffixTreeWithCPD)((WildcardEdge)st.root.follow(AlphabetCharacter.WILDCARD)).wildcardTree;
+    Node n1 = stWild.root.follow(A).getToNode().follow(N).getToNode().follow(AlphabetCharacter.WILDCARD).getToNode().follow(A).getToNode();
+    Node n2 = st.root.follow(A).getToNode().follow(N).getToNode().follow(N).getToNode().follow(AlphabetCharacter.END_CHAR).getToNode();
+    assertEquals(n2, stWild.getCorrespondingNodeInS(n1));
+  }
+  
+  @Test
+  public void testNodeDepthBananaBanana() {
+    SuffixTreeWithCPD.Builder suffixTreeBuilder =
+        new SuffixTreeWithCPD.Builder(new Text("BANANABANANA", true), 2);
+    SuffixTreeWithCPD st = suffixTreeBuilder.build();
+    
+    AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
+    AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
+    AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
+    AlphabetCharacter S = new AlphabetCharacter(new Character('*'));
+    
+    SuffixTreeWithCPD stWild = (SuffixTreeWithCPD)((WildcardEdge)st.root.follow(AlphabetCharacter.WILDCARD)).wildcardTree;
+    Node n1 = stWild.root.follow(A).getToNode().follow(N).getToNode().follow(AlphabetCharacter.WILDCARD).getToNode().follow(A).getToNode();
+    assertEquals(6, n1.depthInSubtree);
+  }
+  
 }
