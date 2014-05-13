@@ -311,7 +311,7 @@ public class Node {
    * input text) for all the leaves in the subtree rooted at this, based on the
    * strings considered from the root of the suffix tree S down to the leaf.
    */
-  protected List<Integer> getOffsetIndicesOfLeaves() {
+  public List<Integer> getOffsetIndicesOfLeaves() {
     List<Integer> indices = new ArrayList<Integer>();
     
     if (isLeaf()) {

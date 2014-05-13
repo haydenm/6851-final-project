@@ -25,6 +25,10 @@ public class Pair<L, R> {
     	return "(" + left.toString() + ", " + right.toString() + ")";
     }
     
+    public int hashCode() {
+      return left.hashCode() + right.hashCode();
+    }
+    
     public boolean equals(Object obj) {
       if (obj instanceof Pair) {
         Pair<L, R> pair = (Pair<L, R>) obj;
