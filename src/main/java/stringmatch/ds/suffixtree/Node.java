@@ -52,6 +52,10 @@ public class Node {
   // The value is DOUBLED from what it would normally be.
   protected int leafLexicographicIndexInT;
   
+  // Stores the depth of the node from the root of the wildcard subtree containing
+  // this leaf.
+  protected int depthInSubtree;
+  
   protected int LCAIndex;
   protected int maxHeight;
   protected Edge longPathEdge;
@@ -72,6 +76,7 @@ public class Node {
     leafOffsetIndexInT = -1;
     leafLexicographicIndexInS = -1;
     leafLexicographicIndexInT = -1;
+    depthInSubtree = -1;
     LCAIndex = -1;
     maxHeight = -1;
   }
@@ -84,6 +89,7 @@ public class Node {
     this.leafLexicographicIndexInS = leafLexicographicIndexInS;
     leafOffsetIndexInT = -1;
     leafLexicographicIndexInT = -1;
+    depthInSubtree = -1;
     LCAIndex = -1;
     maxHeight = -1;
   }
