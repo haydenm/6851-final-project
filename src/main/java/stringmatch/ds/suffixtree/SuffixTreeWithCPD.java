@@ -483,8 +483,6 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     List<Text> subQueries = breakQuery(p);
     Text query = subQueries.get(0);
     Pair<Node, Integer> prev = slowRootedLCP(query);
-    //System.out.println("PREV");
-    //System.out.println(prev);
     if (subQueries.size() > 1) {
       return smartQuery(subQueries, 1, prev);
     } else {
@@ -502,13 +500,10 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       if (wce != null) {
         SuffixTreeWithCPD w = (SuffixTreeWithCPD) wce.wildcardTree;
         Pair<Node, Integer> res1 = w.slowRootedLCP(subQueries.get(i));
-        //System.out.println("WILDCARD RES");
-        //System.out.println(res1);
         if (res1 != null) {
           if (subQueries.size() > i + 1) {
             matches.addAll(w.smartQuery(subQueries, i + 1, res1));
           } else {
-            //System.out.println("USE WILDCARD");
             matches.add(res1);
           }
         }
@@ -516,15 +511,11 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       // Check along centroid path
       Edge e = prev.getLeft().centroidEdge;
       Pair<Node, Integer> next = new Pair<Node, Integer>(e.getToNode(), 1 - e.getLength());
-      //System.out.println("CENTROID NEXT");
-      //System.out.println(next);
       Pair<Node, Integer> res2 = slowUnrootedLCP(subQueries.get(i), next);
-      //System.out.println(res2);
       if (res2 != null) {
         if (subQueries.size() > i + 1) {
           matches.addAll(smartQuery(subQueries, i + 1, res2));
         } else {
-          //System.out.println("HERE");
           matches.add(res2);
         }
       }
@@ -549,8 +540,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     return query(p);
   }
   
-  /*
-  public Pair<Node, Integer> rootedLCP(Text p, Pair<Node, Integer> highestOverlapPoint, Text hos) {
+  /*public Pair<Node, Integer> rootedLCP(Text p, Pair<Node, Integer> highestOverlapPoint, Text hos) {
     //Pair<Node, Integer> hop = highestOverlapPoint(p);
     //Text hos = constructHighestOverlap(hop);
     int i = highestOverlapPoint.getLeft().leafLexicographicIndex;

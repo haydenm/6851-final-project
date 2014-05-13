@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import org.junit.Test;
 
 import stringmatch.ds.text.AlphabetCharacter;
 import stringmatch.ds.text.Text;
+import stringmatch.ds.util.Pair;
 
 public class SuffixTreeWithCPDTest {
 
@@ -148,6 +150,59 @@ public class SuffixTreeWithCPDTest {
       if (2*i != 2*5)
         assertFalse(stWild.leafLexicographicIndices.hasKey(2*i));
     }
+  }
+  
+  @Test
+  public void testSlowSmartQuery() {
+    SuffixTreeWithCPD.Builder suffixTreeBuilder =
+        new SuffixTreeWithCPD.Builder(new Text("BANANABANANA", true), 2);
+    SuffixTreeWithCPD st = suffixTreeBuilder.build();
+    
+    AlphabetCharacter A = new AlphabetCharacter(new Character('A'));
+    AlphabetCharacter B = new AlphabetCharacter(new Character('B'));
+    AlphabetCharacter N = new AlphabetCharacter(new Character('N'));
+    AlphabetCharacter S = new AlphabetCharacter(new Character('*'));
+    
+    Text t = new Text("BAN", false);
+    List<Pair<Node, Integer>> result = st.smartQuery(t);
+    List<Pair<Node, Integer>> expected = new ArrayList<Pair<Node, Integer>>();
+    Node n = st.root.follow(B).getToNode();
+    expected.add(new Pair<Node, Integer>(n, -3));
+    assertEquals(expected, result);
+    
+    t = new Text("A*AN*", false);
+    result = st.smartQuery(t);
+    expected = new ArrayList<Pair<Node, Integer>>();
+    Node n1 = st.root.follow(A).getToNode().follow(S).getToNode().follow(A).getToNode();
+    Node n2 = st.root.follow(A).getToNode().follow(N).getToNode().follow(N).getToNode();
+    expected.add(new Pair<Node, Integer>(n1, -3));
+    expected.add(new Pair<Node, Integer>(n2, 0));
+    assertEquals(expected, result);
+    
+    t = new Text("**T", false);
+    result = st.smartQuery(t);
+    expected = new ArrayList<Pair<Node, Integer>>();
+    assertEquals(expected, result);
+    
+    t = new Text("**A", false);
+    result = st.smartQuery(t);
+    expected = new ArrayList<Pair<Node, Integer>>();
+    n1 = st.root.follow(A).getToNode().follow(S).getToNode().follow(A).getToNode();
+    n2 = st.root.follow(A).getToNode().follow(N).getToNode();
+    expected.add(new Pair<Node, Integer>(n1, -5));
+    expected.add(new Pair<Node, Integer>(n2, 0));
+    assertEquals(expected, result);
+    
+    t = new Text("**", false);
+    result = st.smartQuery(t);
+    expected = new ArrayList<Pair<Node, Integer>>();
+    n1 = st.root.follow(S).getToNode().follow(A).getToNode();
+    n2 = st.root.follow(A).getToNode().follow(S).getToNode();
+    Node n3 = st.root.follow(A).getToNode().follow(N).getToNode();
+    expected.add(new Pair<Node, Integer>(n1, 0));
+    expected.add(new Pair<Node, Integer>(n2, 0));
+    expected.add(new Pair<Node, Integer>(n3, -1));
+    assertEquals(expected, result);
   }
   
 }
