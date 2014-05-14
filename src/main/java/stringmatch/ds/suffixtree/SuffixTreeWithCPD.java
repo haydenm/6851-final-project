@@ -672,14 +672,16 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       }
       // Check along centroid path
       Edge e = prev.getLeft().centroidEdge;
-      Pair<Node, Integer> next = new Pair<Node, Integer>(e.getToNode(), 1 - e.getLength());
-      Pair<Node, Integer> res2 = slowUnrootedLCP(subQueries.get(i), next);
-      if (res2 != null) {
-        if (res2.getLeft().depthInSubtree + res2.getRight() - prev.getLeft().depthInSubtree - 1 == subQueries.get(i).getSize())
-          if (subQueries.size() > i + 1) {
-            matches.addAll(smartQuery(subQueries, queryIndices, overlapHeights, ssps, i + 1, res2, S));
-          } else {
-            matches.add(res2);
+      if (e != null) {
+        Pair<Node, Integer> next = new Pair<Node, Integer>(e.getToNode(), 1 - e.getLength());
+        Pair<Node, Integer> res2 = slowUnrootedLCP(subQueries.get(i), next);
+        if (res2 != null) {
+          if (res2.getLeft().depthInSubtree + res2.getRight() - prev.getLeft().depthInSubtree - 1 == subQueries.get(i).getSize())
+            if (subQueries.size() > i + 1) {
+              matches.addAll(smartQuery(subQueries, queryIndices, overlapHeights, ssps, i + 1, res2, S));
+            } else {
+              matches.add(res2);
+          }
         }
       }
     } else {
