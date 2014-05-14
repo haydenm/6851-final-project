@@ -279,8 +279,8 @@ public class Evaluator {
         SuffixTreeWithCPD st = stb.build();
       
         if (t == 0)
-          //space.put(new Pair<Integer, Integer>(n, k), meter.measureDeep(st));
-          space.put(new Pair<Integer, Integer>(n, k), 0L);
+          space.put(new Pair<Integer, Integer>(n, k), meter.measureDeep(st));
+          //space.put(new Pair<Integer, Integer>(n, k), 0L);
         
         long startTime = System.currentTimeMillis();
         for (Text query : queries) {
