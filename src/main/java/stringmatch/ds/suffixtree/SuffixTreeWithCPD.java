@@ -579,7 +579,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       Edge e = prev.getLeft().centroidEdge;
       if (e != null) {
         Pair<Node, Integer> next = new Pair<Node, Integer>(e.getToNode(), 1 - e.getLength());
-        Pair<Node, Integer> res2 = slowUnrootedLCP(subQueries.get(i), next);
+        Pair<Node, Integer> res2 = unrootedLCP(subQueries.get(i), next);
         if (res2 != null) {
           if (subQueries.size() > i + 1) {
             matches.addAll(slowSmartQuery(subQueries, i + 1, res2));
@@ -591,7 +591,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     } else {
       // Just check along current path
       Pair<Node, Integer> next = new Pair<Node, Integer>(prev.getLeft(), prev.getRight() + 1);
-      Pair<Node, Integer> res = slowUnrootedLCP(subQueries.get(i), next);
+      Pair<Node, Integer> res = unrootedLCP(subQueries.get(i), next);
       if (res != null) {
         if (subQueries.size() > i + 1) {
           matches.addAll(slowSmartQuery(subQueries, i + 1, res));
@@ -674,7 +674,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
       Edge e = prev.getLeft().centroidEdge;
       if (e != null) {
         Pair<Node, Integer> next = new Pair<Node, Integer>(e.getToNode(), 1 - e.getLength());
-        Pair<Node, Integer> res2 = slowUnrootedLCP(subQueries.get(i), next);
+        Pair<Node, Integer> res2 = unrootedLCP(subQueries.get(i), next);
         if (res2 != null) {
           if (res2.getLeft().depthInSubtree + res2.getRight() - prev.getLeft().depthInSubtree - 1 == subQueries.get(i).getSize())
             if (subQueries.size() > i + 1) {
@@ -687,7 +687,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     } else {
       // Just check along current path
       Pair<Node, Integer> next = new Pair<Node, Integer>(prev.getLeft(), prev.getRight() + 1);
-      Pair<Node, Integer> res = slowUnrootedLCP(subQueries.get(i), next);
+      Pair<Node, Integer> res = unrootedLCP(subQueries.get(i), next);
       if (res != null) {
         if (res.getLeft().depthInSubtree + res.getRight() - (prev.getLeft().depthInSubtree + prev.getRight() + 1) == subQueries.get(i).getSize()) {
           if (subQueries.size() > i + 1) {
@@ -759,7 +759,7 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     }
   }
   
-  public Pair<Node, Integer> slowUnrootedLCP(Text p, Pair<Node, Integer> start) {
+  public Pair<Node, Integer> unrootedLCP(Text p, Pair<Node, Integer> start) {
     Node node = start.getLeft();
     int offset = start.getRight();
     Edge e = node.incomingEdge;
