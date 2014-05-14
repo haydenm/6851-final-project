@@ -1,0 +1,90 @@
+%% LyX 2.0.4 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[11pt,oneside,english]{amsart}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{geometry}
+\geometry{verbose, margin = 1in}
+\usepackage{amsthm}
+\usepackage{tikz}
+\usepackage{array}
+\usetikzlibrary{arrows}
+
+\setlength{\parskip}{0.63pc}
+
+
+\makeatletter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Textclass specific LaTeX commands.
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+\theoremstyle{plain}
+\newtheorem{thm}{\protect\theoremname}
+  \theoremstyle{definition}
+  \newtheorem{defn}[thm]{\protect\definitionname}
+  \theoremstyle{plain}
+  \newtheorem{lem}[thm]{\protect\lemmaname}
+
+\makeatother
+
+\usepackage{babel}
+  \providecommand{\definitionname}{Definition}
+  \providecommand{\lemmaname}{Lemma}
+\providecommand{\theoremname}{Theorem}
+
+\begin{document}
+
+\title{Text Indexing with Wildcards:\\
+An Experimental Comparison}
+\author{Hayden Metsky (hmetsky@mit.edu)}
+\author{Casey O'Brien (cmobrien@mit.edu)}
+
+
+\maketitle
+
+
+\section{Introduction}
+
+Consider the text indexing problem. Given an input text and query string, we wish to report all the indices of the input text to which the query string matches. In this paper we will consider a generalized version of this problem, in which we allow the query string to contain \textit{wildcards}. A wildcard is a character which can be matched to any other character. We will discuss four possible approaches to this problem. The first two are naive solutions, one of which uses little space but has a slow query time, and the other which has a fast query time but uses a lot of space. Then, we will discuss two approaches presented by Cole et. al in 2004 \cite{cole}.
+
+While theoretical bounds for each of these solutions have already been established, our goal is to report the performance of each of these solutions in practice. To this end, we implemented each of them in Java. For each solution, we measured the total space and query time for various texts and query patterns, allowing varying numbers of wildcards.
+
+In terms of space, the solutions performed as expected based on their theoretical bounds. Perhaps more interestingly, the actual performances of the query algorithms differed substantially from what was suggested by their theoretical runtimes. In particular, both queries by Cole et. al performed worse than the naive approaches, despite having much better worse case bounds in theory.
+
+\subsection{Organization of the Report}
+
+In this section, we will present an overview of each of the solutions as well as their theoretical bounds. In Section 2, we will discuss the details of the implementation of our structures and the methods we used to measure their performance. In Section 3, we present the results of our experimentation, and finally in section 4 we discuss the implications of these results.
+
+\subsection{Preliminaries}
+
+Throughout this paper, for ease of notation, we will interchangeably use $t$ to refer to the query text itself and also the length of the query text (and similarly for $p$). We will use $k$ to denote the maximum number of wildcards allowed in a query. Note that because the building of the structures can depend on $k$, we require that this parameter be set beforehand and not dynamically with each query. Finally, we will use $\Sigma$ to denote that size of the alphabet.
+
+\subsection{Naive Solution 1: Small Space, Slow Query}
+
+This solution uses only a standard suffix tree $S$ on $t$. To perform the query, we perform a standard query on the suffix tree, with the addition that each time we come across a wildcard in $p$, we branch and explore all possible subtrees. The space for this solution is clearly $O(t)$, and the time for a query is $O(\Sigma^kp)$, where $\Sigma$ is the size of the alphabet. The $\Sigma^k$ term arises from the fact that we may have to fully explore every subtree of a node each time we search a wildcard.
+
+\subsection{Naive Solution 2: Big Space, Fast Query}
+
+\subsection{Cole et al. Solution 1: Centroid Path Decomposition with Slow Query}
+
+\subsection{Cole et al. Solution 2: Centroid Path Decomposition with Fast Query}
+
+
+
+\section{Methodology}
+
+\section{Results}
+
+\section{Discussion}
+
+ \begin{thebibliography}{9}
+\bibitem{cole}
+Richard Cole, Lee-Ad Gottlieb, and Moshe Lewenstein.
+ Dictionary matching and indexing with errors and don't cares.
+ In \textit{Proc. 36th ACM Symposium on Theory of Computing (STOC)},
+ pages 91--100, 2004.
+ 
+ \bibitem{lec}
+ Erik Demaine. Least Common and Level Ancestors. MIT 6.851 Lectures 15 Notes Spring 2014. http://courses.csail.mit.edu/6.851/spring14/lectures/L15.pdf
+\end{thebibliography}
+
+\end{document}
