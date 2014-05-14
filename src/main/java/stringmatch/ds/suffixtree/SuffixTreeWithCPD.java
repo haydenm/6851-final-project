@@ -851,10 +851,11 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
           wildcardSubtree.lexicographicIndexToLeafInS = lexicographicIndexToNodeInS;
           wildcardSubtree.subtreeDepth = depthToNode + 1; // +1 for the wildcard edge.
           nodeClone = turnIntoWildcardSubtree(wildcardSubtree);
-          if (!forSlowQueries)
+          if (!forSlowQueries) {
             wildcardSubtree.constructLCAAndMA();
-          wildcardSubtree.determineLeafValuesInSubtree();
-          wildcardSubtree.constructLeafLexicographicIndexYFT();
+            wildcardSubtree.determineLeafValuesInSubtree();
+            wildcardSubtree.constructLeafLexicographicIndexYFT();
+          }
           wildcardSubtree.constructNodeDepths(wildcardSubtree.root, 0);
       
           // Attach nodeClone onto node. nodeClone should have just one outgoing
@@ -923,12 +924,14 @@ public class SuffixTreeWithCPD extends SuffixTreeWithWildcards {
     
     public SuffixTreeWithCPD build(boolean forSlowQueries) {
       SuffixTreeWithCPD stcpd = new SuffixTreeWithCPD(this);
+      if (!forSlowQueries)
       stcpd.offsetToLexicographicIndexInS = constructOffsetToLexicographicIndexMap();
       stcpd.subtreeDepth = 0;
-      if (!forSlowQueries)
+      if (!forSlowQueries) {
         stcpd.constructLCAAndMA();
-      stcpd.determineLeafValuesInSubtree();
-      stcpd.constructLeafLexicographicIndexYFT();
+        stcpd.determineLeafValuesInSubtree();
+        stcpd.constructLeafLexicographicIndexYFT();
+      }
       stcpd.constructNodeDepths(root, 0);
       
       // Only do this for the original suffix tree S, and not for every wildcard
