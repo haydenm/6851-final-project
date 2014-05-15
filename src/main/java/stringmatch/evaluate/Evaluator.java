@@ -21,7 +21,9 @@ import stringmatch.ds.util.Pair;
 
 public class Evaluator {
 
-  public static final int NUM_QUERIES = 100;
+  public static final int AMOUNT_INPUT_EXTRACTED = 1000000;
+  public static final int NUM_TRIALS = 5;
+  public static final int NUM_QUERIES = 10000;
   public static final Random random = new Random();
   public static MemoryMeter meter = new MemoryMeter();
   
@@ -29,16 +31,28 @@ public class Evaluator {
       String runtimeOutputFilename, String spaceOutputFilename)
       throws FileNotFoundException {
     List<Pair<Integer, Integer>> paramVals = new ArrayList<Pair<Integer, Integer>>();
-    for (int n = 20000; n <= 100000; n += 20000) {
+    for (int n = 10000; n <= 50000; n += 10000) {
       // k doesn't matter in building this tree, but does affect runtime of
       // queries.
-      for (int k = 0; k <= 40; k += 4) {
+      for (int k = 0; k <= 30; k += 1) {
         paramVals.add(new Pair<Integer, Integer>(n, k));
       }
     }
     
+    // To control for cache issues, take the first few values in paramVals
+    // and put them in front (so they get run twice).
+    List<Pair<Integer, Integer>> beginningVals = new ArrayList<Pair<Integer, Integer>>();
+    for (int i = 0; i < Math.min(3, paramVals.size()); i++) {
+      beginningVals.add(paramVals.get(i));
+    }
+    for (int i = 0; i < beginningVals.size(); i++) {
+      paramVals.add(i, beginningVals.get(i));
+    }
+    
     Map<Pair<Integer, Integer>, Double> runtime = new HashMap<Pair<Integer, Integer>, Double>();
     Map<Pair<Integer, Integer>, Long> space = new HashMap<Pair<Integer, Integer>, Long>();
+    
+    System.gc();
     
     for (Pair<Integer, Integer> paramVal : paramVals) {
       int n = paramVal.getLeft();
@@ -46,23 +60,35 @@ public class Evaluator {
       int p = Math.max(50, k);
       System.out.println("Running n=" + n + ", k=" + k + ", p=" + p);
       
-      Text inputTextPortion = inputText.extractSubstring(0, n).addEndCharIfNeeded();
-      List<Text> queries = makeQueries(inputTextPortion, NUM_QUERIES, p, k);
+      long totalTime = 0;
+      for (int t = 0; t < NUM_TRIALS; t++) {
+        int offset = random.nextInt(AMOUNT_INPUT_EXTRACTED - n - 1);
+        Text inputTextPortion = inputText.extractSubstring(offset, offset + n).addEndCharIfNeeded();
+        List<Text> queries = makeQueries(inputTextPortion, NUM_QUERIES/NUM_TRIALS, p, k);
+        
+        SuffixTree.Builder stb = new SuffixTree.Builder(inputTextPortion);
+        SuffixTree st = stb.build();
+        if (t == 0)
+          space.put(new Pair<Integer, Integer>(n, k), meter.measureDeep(st));
       
-      // Note: We're building this more than needed (only need to build it once per n).
-      SuffixTree.Builder stb = new SuffixTree.Builder(inputTextPortion);
-      SuffixTree st = stb.build();
-      space.put(new Pair<Integer, Integer>(n, k), meter.measureDeep(st));
-      
-      long startTime = System.currentTimeMillis();
-      for (Text query : queries) {
-        List<Integer> matches = st.naiveWildcardQueryIndices(query);
-        if (matches.size() < 1)
-          throw new RuntimeException("Didn't find match but should have!");
-        //verifyQueryIndices(inputTextPortion, query, matches);
+        long startTime = System.currentTimeMillis();
+        for (Text query : queries) {
+          List<Integer> matches = st.naiveWildcardQueryIndices(query);
+          if (matches.size() < 1)
+            throw new RuntimeException("Didn't find match but should have!");
+          //verifyQueryIndices(inputTextPortion, query, matches);
+        }
+        long endTime = System.currentTimeMillis();
+        totalTime += endTime - startTime;
+        
+        // Clean up between calls.
+        inputTextPortion = null;
+        queries = null;
+        stb = null;
+        st = null;
+        System.gc();
       }
-      long endTime = System.currentTimeMillis();
-      double timePerQuery = ((double) (endTime - startTime)) / NUM_QUERIES;
+      double timePerQuery = ((double) totalTime) / NUM_QUERIES;
       runtime.put(paramVal, timePerQuery);
     }
     
@@ -73,40 +99,66 @@ public class Evaluator {
       String runtimeOutputFilename, String spaceOutputFilename)
       throws FileNotFoundException {
     List<Pair<Integer, Integer>> paramVals = new ArrayList<Pair<Integer, Integer>>();
-    for (int n = 1000; n <= 1000; n += 1000) {
+    for (int n = 1600; n >= 400; n -= 400) {
       // k doesn't matter in building this tree, but does affect runtime of
       // queries.
-      for (int k = 0; k <= 10; k += 1) {
+      for (int k = 10; k >= 0; k -= 1) {
         paramVals.add(new Pair<Integer, Integer>(n, k));
       }
     }
+    
+    // To control for cache issues, take the first few values in paramVals
+    // and put them in front (so they get run twice).
+    List<Pair<Integer, Integer>> beginningVals = new ArrayList<Pair<Integer, Integer>>();
+    for (int i = 0; i < Math.min(3, paramVals.size()); i++) {
+      beginningVals.add(paramVals.get(i));
+    }
+    for (int i = 0; i < beginningVals.size(); i++) {
+      paramVals.add(i, beginningVals.get(i));
+    }
+    
+    // Runs out of space at n=1000, k=12.
         
     Map<Pair<Integer, Integer>, Double> runtime = new HashMap<Pair<Integer, Integer>, Double>();
     Map<Pair<Integer, Integer>, Long> space = new HashMap<Pair<Integer, Integer>, Long>();
     
+    System.gc();
+    
     for (Pair<Integer, Integer> paramVal : paramVals) {
       int n = paramVal.getLeft();
       int k = paramVal.getRight();
-      int p = Math.max(50, k);
+      int p = Math.max(25, k);
       System.out.println("Running n=" + n + ", k=" + k + ", p=" + p);
       
-      Text inputTextPortion = inputText.extractSubstring(0, n-1).addEndCharIfNeeded();
-      List<Text> queries = makeQueries(inputTextPortion, NUM_QUERIES, p, k);
+      long totalTime = 0;
+      for (int t = 0; t < NUM_TRIALS; t++) {
+        int offset = random.nextInt(AMOUNT_INPUT_EXTRACTED - n - 1);
+        Text inputTextPortion = inputText.extractSubstring(offset, offset + n).addEndCharIfNeeded();
+        List<Text> queries = makeQueries(inputTextPortion, NUM_QUERIES/NUM_TRIALS, p, k);
+        
+        SuffixTreeNaiveBigSpace.Builder stb = new SuffixTreeNaiveBigSpace.Builder(inputTextPortion, k);
+        SuffixTreeNaiveBigSpace st = stb.build();
+        if (t == 0)
+          space.put(new Pair<Integer, Integer>(n, k), meter.measureDeep(st));
       
-      // Note: We're building this more than needed (only need to build it once per n).
-      SuffixTreeNaiveBigSpace.Builder stb = new SuffixTreeNaiveBigSpace.Builder(inputTextPortion, k);
-      SuffixTreeNaiveBigSpace st = stb.build();
-      space.put(new Pair<Integer, Integer>(n, k), meter.measureDeep(st));
-      
-      long startTime = System.currentTimeMillis();
-      for (Text query : queries) {
-        List<Integer> matches = st.queryForIndices(query);
-        if (matches.size() < 1)
-          throw new RuntimeException("Didn't find match but should have!");
-        //verifyQueryIndices(inputTextPortion, query, matches);
+        long startTime = System.currentTimeMillis();
+        for (Text query : queries) {
+          List<Integer> matches = st.queryForIndices(query);
+          if (matches.size() < 1)
+            throw new RuntimeException("Didn't find match but should have!");
+          //verifyQueryIndices(inputTextPortion, query, matches);
+        }
+        long endTime = System.currentTimeMillis();
+        totalTime += endTime - startTime;
+        
+        // Clean up between calls.
+        inputTextPortion = null;
+        queries = null;
+        stb = null;
+        st = null;
+        System.gc();
       }
-      long endTime = System.currentTimeMillis();
-      double timePerQuery = ((double) (endTime - startTime)) / NUM_QUERIES;
+      double timePerQuery = ((double) totalTime) / NUM_QUERIES;
       runtime.put(paramVal, timePerQuery);
     }
     
@@ -117,12 +169,22 @@ public class Evaluator {
       String runtimeOutputFilename, String spaceOutputFilename)
       throws FileNotFoundException {
     List<Pair<Integer, Integer>> paramVals = new ArrayList<Pair<Integer, Integer>>();
-    for (int n = 1000; n <= 1000; n += 1000) {
+    for (int n = 10000; n >= 2000; n -= 2000) {
       // k doesn't matter in building this tree, but does affect runtime of
       // queries.
-      for (int k = 0; k <= 10; k += 1) {
+      for (int k = 16; k >= 0; k -= 1) {
         paramVals.add(new Pair<Integer, Integer>(n, k));
       }
+    }
+    
+    // To control for cache issues, take the first few values in paramVals
+    // and put them in front (so they get run twice).
+    List<Pair<Integer, Integer>> beginningVals = new ArrayList<Pair<Integer, Integer>>();
+    for (int i = 0; i < Math.min(3, paramVals.size()); i++) {
+      beginningVals.add(paramVals.get(i));
+    }
+    for (int i = 0; i < beginningVals.size(); i++) {
+      paramVals.add(i, beginningVals.get(i));
     }
     
     // Note: we use less space than bigspace around n=1000,k=9
@@ -130,29 +192,44 @@ public class Evaluator {
     Map<Pair<Integer, Integer>, Double> runtime = new HashMap<Pair<Integer, Integer>, Double>();
     Map<Pair<Integer, Integer>, Long> space = new HashMap<Pair<Integer, Integer>, Long>();
     
+    System.gc();
+    
     for (Pair<Integer, Integer> paramVal : paramVals) {
       int n = paramVal.getLeft();
       int k = paramVal.getRight();
-      int p = Math.max(50, k);
+      int p = Math.max(25, k);
       System.out.println("Running n=" + n + ", k=" + k + ", p=" + p);
       
-      Text inputTextPortion = inputText.extractSubstring(0, n-1).addEndCharIfNeeded();
-      List<Text> queries = makeQueries(inputTextPortion, NUM_QUERIES, p, k);
+      long totalTime = 0;
+      for (int t = 0; t < NUM_TRIALS; t++) {
+        int offset = random.nextInt(AMOUNT_INPUT_EXTRACTED - n - 1);
+        Text inputTextPortion = inputText.extractSubstring(offset, offset + n).addEndCharIfNeeded();
+        List<Text> queries = makeQueries(inputTextPortion, NUM_QUERIES/NUM_TRIALS, p, k);
+
+        SuffixTreeWithCPD.Builder stb = new SuffixTreeWithCPD.Builder(inputTextPortion, k);
+        SuffixTreeWithCPD st = stb.build(true);
+        if (t == 0)
+          space.put(new Pair<Integer, Integer>(n, k), meter.measureDeep(st));
+        //space.put(new Pair<Integer, Integer>(n, k), 0L);
             
-      // Note: We're building this more than needed (only need to build it once per n).
-      SuffixTreeWithCPD.Builder stb = new SuffixTreeWithCPD.Builder(inputTextPortion, k);
-      SuffixTreeWithCPD st = stb.build();
-      space.put(new Pair<Integer, Integer>(n, k), meter.measureDeep(st));
-      
-      long startTime = System.currentTimeMillis();
-      for (Text query : queries) {
-        List<Integer> matches = st.slowSmartQueryIndices(query);
-        if (matches.size() < 1)
-          throw new RuntimeException("Didn't find match but should have!");
-        //verifyQueryIndices(inputTextPortion, query, matches);
+        long startTime = System.currentTimeMillis();
+        for (Text query : queries) {
+          List<Integer> matches = st.slowSmartQueryIndices(query);
+          if (matches.size() < 1)
+            throw new RuntimeException("Didn't find match but should have!");
+          //verifyQueryIndices(inputTextPortion, query, matches);
+        }
+        long endTime = System.currentTimeMillis();
+        totalTime += endTime - startTime;
+        
+        // Clean up between calls.
+        inputTextPortion = null;
+        queries = null;
+        stb = null;
+        st = null;
+        System.gc();
       }
-      long endTime = System.currentTimeMillis();
-      double timePerQuery = ((double) (endTime - startTime)) / NUM_QUERIES;
+      double timePerQuery = ((double) totalTime) / NUM_QUERIES;
       runtime.put(paramVal, timePerQuery);
     }
     
@@ -163,43 +240,66 @@ public class Evaluator {
       String runtimeOutputFilename, String spaceOutputFilename)
       throws FileNotFoundException {
     List<Pair<Integer, Integer>> paramVals = new ArrayList<Pair<Integer, Integer>>();
-    for (int n = 100; n <= 2000; n += 1000) {
+    for (int n = 1600; n >= 400; n -= 400) {
       // k doesn't matter in building this tree, but does affect runtime of
       // queries.
-      for (int k = 0; k <= 5; k += 1) {
+      for (int k = 10; k >= 0; k -= 1) {
         paramVals.add(new Pair<Integer, Integer>(n, k));
       }
+    }
+    
+    // To control for cache issues, take the first few values in paramVals
+    // and put them in front (so they get run twice).
+    List<Pair<Integer, Integer>> beginningVals = new ArrayList<Pair<Integer, Integer>>();
+    for (int i = 0; i < Math.min(3, paramVals.size()); i++) {
+      beginningVals.add(paramVals.get(i));
+    }
+    for (int i = 0; i < beginningVals.size(); i++) {
+      paramVals.add(i, beginningVals.get(i));
     }
     
     Map<Pair<Integer, Integer>, Double> runtime = new HashMap<Pair<Integer, Integer>, Double>();
     Map<Pair<Integer, Integer>, Long> space = new HashMap<Pair<Integer, Integer>, Long>();
     
+    System.gc();
+    
     for (Pair<Integer, Integer> paramVal : paramVals) {
       int n = paramVal.getLeft();
       int k = paramVal.getRight();
-      int p = Math.max(50, k);
+      int p = Math.max(25 , k);
       System.out.println("Running n=" + n + ", k=" + k + ", p=" + p);
       
-      Text inputTextPortion = inputText.extractSubstring(0, n-1).addEndCharIfNeeded();
-      List<Text> queries = makeQueries(inputTextPortion, NUM_QUERIES, p, k);
-            
-      // Note: We're building this more than needed (only need to build it once per n).
-      SuffixTreeWithCPD.Builder stb = new SuffixTreeWithCPD.Builder(inputTextPortion, k);
-      SuffixTreeWithCPD st = stb.build();
-      space.put(new Pair<Integer, Integer>(n, k), meter.measureDeep(st));
+      long totalTime = 0;
+      for (int t = 0; t < NUM_TRIALS; t++) {
+        int offset = random.nextInt(AMOUNT_INPUT_EXTRACTED - n - 1);
+        Text inputTextPortion = inputText.extractSubstring(offset, offset + n).addEndCharIfNeeded();
+        List<Text> queries = makeQueries(inputTextPortion, NUM_QUERIES/NUM_TRIALS, p, k);  
+
+        SuffixTreeWithCPD.Builder stb = new SuffixTreeWithCPD.Builder(inputTextPortion, k);
+        SuffixTreeWithCPD st = stb.build();
       
-      System.out.println(inputTextPortion);
-      
-      long startTime = System.currentTimeMillis();
-      for (Text query : queries) {
-        System.out.println(query);
-        List<Integer> matches = st.smartQueryIndices(query);
-        if (matches.size() < 1)
-          throw new RuntimeException("Didn't find match but should have!");
-        //verifyQueryIndices(inputTextPortion, query, matches);
+        if (t == 0)
+          space.put(new Pair<Integer, Integer>(n, k), meter.measureDeep(st));
+          //space.put(new Pair<Integer, Integer>(n, k), 0L);
+        
+        long startTime = System.currentTimeMillis();
+        for (Text query : queries) {
+          List<Integer> matches = st.smartQueryIndices(query);
+          if (matches.size() < 1)
+            throw new RuntimeException("Didn't find match but should have!");
+          //verifyQueryIndices(inputTextPortion, query, matches);
+        }
+        long endTime = System.currentTimeMillis();
+        totalTime += endTime - startTime;
+        
+        // Clean up between calls.
+        inputTextPortion = null;
+        queries = null;
+        stb = null;
+        st = null;
+        System.gc();
       }
-      long endTime = System.currentTimeMillis();
-      double timePerQuery = ((double) (endTime - startTime)) / NUM_QUERIES;
+      double timePerQuery = ((double) totalTime) / NUM_QUERIES;
       runtime.put(paramVal, timePerQuery);
     }
     
@@ -244,7 +344,7 @@ public class Evaluator {
         double rt = runtime.get(new Pair<Integer, Integer>(n, k));
         timeRow += "\t" + String.valueOf(rt);
         long s = space.get(new Pair<Integer, Integer>(n, k));
-        spaceRow += "\t" + String.valueOf(s);
+        spaceRow += "\t" + String.valueOf((double)s/1048576.0);
       }
       pwTime.println(timeRow);
       pwSpace.println(spaceRow);
@@ -288,8 +388,8 @@ public class Evaluator {
     String chr1Filename = args[0];
     String englishCorpusFilename = args[1];
     
-    Text chr = DataReaders.readFile(chr1Filename, 1000000);
-    Text eng = DataReaders.readFile(englishCorpusFilename, 1000000);
+    Text chr = DataReaders.readFile(chr1Filename, AMOUNT_INPUT_EXTRACTED);
+    Text eng = DataReaders.readFile(englishCorpusFilename, AMOUNT_INPUT_EXTRACTED);
     
     String outputPath = args[2];
     
@@ -300,10 +400,10 @@ public class Evaluator {
     //evaluateBigSpace(eng, outputPath + "bigspace_bigalph_time.txt", outputPath + "bigspace_bigalph_space.txt");
     
     //evaluateCPDSlow(chr, outputPath + "cpdslow_littlealph_time.txt", outputPath + "cpdslow_littlealph_space.txt");
-    evaluateCPDSlow(eng, outputPath + "cpdslow_bigalph_time.txt", outputPath + "cpdslow_bigalph_space.txt");
+    //evaluateCPDSlow(eng, outputPath + "cpdslow_bigalph_time.txt", outputPath + "cpdslow_bigalph_space.txt");
     
     //evaluateCPD(chr, outputPath + "cpd_littlealph_time.txt", outputPath + "cpd_littlealph_space.txt");
-    //evaluateCPD(eng, outputPath + "cpd_bigalph_time.txt", outputPath + "cpd_bigalph_space.txt");
+    evaluateCPD(eng, outputPath + "cpd_bigalph_time.txt", outputPath + "cpd_bigalph_space.txt");
   }
   
 }
