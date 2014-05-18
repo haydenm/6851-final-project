@@ -247,8 +247,86 @@ For these reasons, the figures and data in this paper differ from what we showed
 \section{Results}
 \label{sec:results}
 
+In this section we show plots of both space usage and runtime for varied $t$ and $k$.
+We choose to fix $p$ for each plot because (i) in most practical applications $p$ would have to be relatively small (effectively a constant) to find a match, (ii) the space usage of the data structures do not depend on $p$, and (iii) the theoretical runtimes of the queries do not depend significantly (i.e., not more than linearly) on $p$.
+These plots allows us to empirically compare the data structures.
+In Section~\ref{sec:discussion} we discuss the reasons behind our results and their implications.
+
+We first seek to compare all four data structures for the same choices of parameters.
+In generating these plots, we are limited by the preprocessing time of the \textsc{Big-Space} data structure.
+Indeed, its preprocessing time is bounded below by its space usage, which is large.
+We empirically chose fixed values of $t$ and $p$, and a range of $k$, that allow us to construct the \textsc{Big-Space} structure in a reasonable time (under one hour).
+The space usage of all four structures is shown in Figure~\ref{fig:allfour-space}.
+The time usage of all four structures is shown in Figure~\ref{fig:allfour-time}.
+
+\begin{figure*}[!t]
+\begin{center}
+\includegraphics[height = 4in]{figures/plot-allfour-space.pdf}
+\end{center}
+\caption{A space comparison of all four data structures. $t=5000$, $p=30$, and $k \in [0, 14]$.}
+\label{fig:allfour-space}
+\end{figure*}
+
+\begin{figure*}[!t]
+\begin{center}
+\includegraphics[height = 4in]{figures/plot-allfour-time.pdf}
+\end{center}
+\caption{A runtime comparison of all four data structures. $t=5000$, $p=30$, and $k \in [0, 14]$.}
+\label{fig:allfour-time}
+\end{figure*}
+
+We then seek to plot space usage and runtime individually for each of the data structures, where we now vary both $t$ and $k$.
+For each experiment we again chose a fixed $p$, and a range of values for $t$ and $k$, that allow us to construct the data structures and run queries in a reasonable time.
+
+
 \section{Discussion}
 \label{sec:discussion}
+
+In this section we discuss the results of each of our experiments.
+The primary discussion relevant to this paper is in the comparison of the four structures: Section~\ref{subsec:space compare} and Section~\ref{subsec:timecompare}.
+The remaining discussion briefly explains the results of the experiments for each individual data structure.
+
+\subsection{Space comparison of all four structures}
+\label{subsec:spacecompare}
+
+The space comparison of all four data structures, shown in Figure~\ref{fig:allfour-space}, fits well with what we expect from theory.
+Indeed, the space usage of the \textsc{Slow-Query} data structure is small and has no dependence on $k$, as expected.
+The space usage of the \textsc{CPD-Slow} data structure is also small and has a dependence on $k$, which is expected because the tree is grown recursively down to a depth of $k$ wildcards.
+The space usage of the \textsc{CPD-Fast} structure is, for small $k$, the largest of the four approaches; this is most likely a consequence of the substantial overhead incurred by storing at each wildcard subtree all of the data structures necessary for performing LCP queries.
+However, the space usage of the \textsc{Big-Space} structure ultimately exceeds the other structures and clearly grows exponentially in $k$, as expected.
+
+\subsection{Query time comparison of all four structures}
+\label{subsec:timecompare}
+
+The average query time comparison of all four structures, shown in Figure~\ref{fig:allfour-time}, does not fit as closely with what we would expected from the theoretical bounds on runtime, but can be explained in practice.
+Note that the growth and ordering of query times on the \textsc{Slow-Query}, \textsc{Big-Space}, and \textsc{CPD-Slow} structures are indeed in accordance with what we would expect from theory.
+
+However, the query time on the \textsc{CPD-Fast} structure is surprising.
+In particular, it is slower than the others (namely, slower than \textsc{Slow-Query} and \textsc{CPD-Slow}).
+We believe it is slower than the other structures for two reasons.
+First, there is substantial overhead, in terms of constant factors, incurred in performing LCP queries; this overhead is a part of the \textsc{CPD-Fast} structure, but not the \textsc{CPD-Slow} structure.
+Second, we can compare the asymptotic runtimes of queries on the \textsc{CPD-Fast} structure and the \textsc{CPD-Slow} structure.
+A query on the \textsc{CPD-Fast} structure runs in $O(p + 2^k \log \log t)$ time and a query on the \textsc{CPD-Slow} structure runs in $O(2^k p)$ time.
+Hence, we would only expect queries on the \textsc{CPD-Fast} structure to be faster than those on the \textsc{CPD-Slow} structure if $\log \log t$ is smaller than $p$.
+However, for the values of $t$ and $p$ we use (as well as for any reasonable choices), there is not a substantial difference between these values (i.e., they are within a factor of about 10).
+Additionally, the plot for the query time on the \textsc{CPD-Fast} structure is surprising because the query time decreases as $k$ increases.
+Our suspected reason for this is as follows:
+When encountering a wildcard in a query pattern we perform a rooted LCP query and when encountering non-wildcard characters we perform an unrooted LCP query.
+An unrooted LCP query has additional overhead and reduces to a rooted LCP query.
+Therefore, in terms of constant factors, an unrooted LCP query should take strictly slower than a rooted LCP query.
+As the number of wildcards in our queries increases, we perform more rooted LCP queries and fewer unrooted LCP queries, and thus the query time may begin to decrease.
+
+\subsection{Space and time of the \textsc{Slow-Query} structure}
+% a few sentences
+
+\subsection{Space and time of the \textsc{Big-Space} structure}
+% a few sentences
+
+\subsection{Space and time of the \textsc{CPD-Slow} structure}
+% a few sentences
+
+\subsection{Space and time of the \textsc{CPD-Fast} structure}
+% a few sentences
 
  \begin{thebibliography}{9}
 \bibitem{cole}
