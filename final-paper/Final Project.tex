@@ -1,6 +1,7 @@
 %% LyX 2.0.4 created this file.  For more info, see http://www.lyx.org/.
 %% Do not edit unless you really know what you are doing.
-\documentclass[11pt,oneside,english]{amsart}
+%\documentclass[11pt,oneside,english]{amsart}
+\documentclass[11pt,english]{article}
 \usepackage[T1]{fontenc}
 \usepackage[latin9]{inputenc}
 \usepackage{geometry}
@@ -12,11 +13,14 @@
 
 \setlength{\parskip}{0.63pc}
 
+% Split long \texttt (now \path) lines
+\usepackage{url}
+
 
 \makeatletter
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Textclass specific LaTeX commands.
-\numberwithin{equation}{section}
-\numberwithin{figure}{section}
+%\numberwithin{equation}{section}
+%\numberwithin{figure}{section}
 \theoremstyle{plain}
 \newtheorem{thm}{\protect\theoremname}
   \theoremstyle{definition}
@@ -33,11 +37,12 @@
 
 \begin{document}
 
-\title{Text Indexing with Wildcards:
-An Experimental Comparison}
-\author{Hayden Metsky (hmetsky@mit.edu)}
-\author{Casey O'Brien (cmobrien@mit.edu)}
-
+\title{Text Indexing with Wildcards: An Experimental Comparison \\[0.15in]
+	\large{\textsc{6.851 Final Project}}
+	\vspace{-2pt}
+	}
+\author{Hayden Metsky (hmetsky@mit.edu) and Casey O'Brien (cmobrien@mit.edu)}
+\date{\vspace{-15pt}May 18, 2014}
 
 \maketitle
 
@@ -52,19 +57,22 @@ In terms of space, the solutions performed as expected based on their theoretica
 
 \subsection{Organization of the Report}
 
-In this section, we will present an overview of each of the solutions as well as their theoretical bounds. In Section 2, we will discuss the details of the implementation of our structures and the methods we used to measure their performance. In Section 3, we present the results of our experimentation, and finally in section 4 we discuss the implications of these results.
+In section~\ref{sec:survey} we will present an overview of each of the solutions as well as their theoretical bounds. In Section~\ref{sec:methodology}, we will discuss the details of the implementation of our structures and the methods we used to measure their performance. In Section~\ref{sec:results}, we present the results of our experimentation, and finally in section~\ref{sec:discussion} we discuss the underlying reasons for and implications of these results.
 
-\subsection{Preliminaries}
+\subsection{Notation}
 
 Throughout this paper, for ease of notation, we will interchangeably use $t$ to refer to the query text itself and also the length of the query text (and similarly for $p$). We will use $k$ to denote the maximum number of wildcards allowed in a query. Note that because the building of the structures can depend on $k$, we require that this parameter be set beforehand and not dynamically with each query. Finally, we will use $\Sigma$ to denote that size of the alphabet.
 
+\section{Survey of Solutions to the Text Indexing Problem}
+\label{sec:survey}
+
 \subsection{Naive Solution 1: Small Space, Slow Query}
 
-This solution uses only a standard suffix tree $S$ on $t$. To perform the query, we perform a standard query on the suffix tree, with the addition that each time we come across a wildcard in $p$, we branch and explore all possible subtrees. The space for this solution is clearly $O(t)$, and the time for a query is $O(\Sigma^kp)$. The $\Sigma^k$ term arises from the fact that we may have to fully explore every subtree of a node each time we reach a wildcard.
+This solution uses only a standard suffix tree $S$ on $t$. To perform the query, we perform a standard query on the suffix tree, with the addition that each time we come across a wildcard in $p$, we branch and explore all possible subtrees. The space for this solution is clearly $O(t)$, and the time for a query is $O(\Sigma^kp)$. The $\Sigma^k$ term arises from the fact that we may have to fully explore every subtree of a node each time we reach a wildcard. We will refer to this solution as the \textsc{Slow-Query} approach.
 
 \subsection{Naive Solution 2: Big Space, Fast Query}
 
-By modifying the suffix tree to store additional information, we can achieve a much faster query time. For this solution, we modify each node $v$ to contain an edge to a wildcard subtree. This edge will represent the wildcard. We build a suffix tree from all the suffixes represented below $v$, skipping over the first letter of each suffix. We build these wildcard subtrees recursively, such that each root-to-leaf path contains at most $k$ wildcards. Note that building these subtrees will involve splitting edges, because we need to have the option to match a wildcard instead of any given letter. Figure 1.1 shows an example suffix tree with a single wildcard tree built. With these wildcard subtrees, we have a query time of $O(p)$. However, the space required to store this tree is $O(t^{1 + k})$. 
+By modifying the suffix tree to store additional information, we can achieve a much faster query time. For this solution, we modify each node $v$ to contain an edge to a wildcard subtree. This edge will represent the wildcard. We build a suffix tree from all the suffixes represented below $v$, skipping over the first letter of each suffix. We build these wildcard subtrees recursively, such that each root-to-leaf path contains at most $k$ wildcards. Note that building these subtrees will involve splitting edges, because we need to have the option to match a wildcard instead of any given letter. Figure 1.1 shows an example suffix tree with a single wildcard tree built. With these wildcard subtrees, we have a query time of $O(p)$. However, the space required to store this tree is $O(t^{1 + k})$.  We will refer to this solution as the \textsc{Big-Space} approach.
 
 \begin{figure*}[!t]
 \begin{center}
@@ -76,12 +84,13 @@ By modifying the suffix tree to store additional information, we can achieve a m
 \end{figure*}
 
 \subsection{Cole et al. Solution 1: Centroid Path Decomposition with Slow Query}
+\label{subsec:cpdslow}
 
-In 2004, Cole et al. provided a solution to this problem which achieves faster query time that the first solution, but less space than the second solution. In order to achieve this, the suffix tree is first decomposed into \textit{centroid paths}. The centroid path from the root to one of its descendant leaves is the path which follows the edges with the most descendant leaves (breaking ties arbitrarily). For nodes hanging off of this centroid path, centroid paths are created recursively. The centroid edge of a node is the outgoing edge of the node which lies along a centroid path. By construction, each node has exactly one centroid edge. Figure 1.2 shows the centroid path decomposition of an example suffix tree.
+In 2004, Cole et al. provided a solution (that we call \textsc{CPD-Slow}) to this problem which achieves faster query time that the first solution, but less space than the second solution. In order to achieve this, the suffix tree is first decomposed into \textit{centroid paths}. The centroid path from the root to one of its descendant leaves is the path which follows the edges with the most descendant leaves (breaking ties arbitrarily). For nodes hanging off of this centroid path, centroid paths are created recursively. The centroid edge of a node is the outgoing edge of the node which lies along a centroid path. By construction, each node has exactly one centroid edge. Figure 1.2 shows the centroid path decomposition of an example suffix tree.
 
 Like the big space solution described above, the Centroid Path Decomposition (CPD) solution builds wildcard subtrees. However, the wildcard subtrees only include suffixes below the node which do not lie along the centroid edge of that node. With this construction, the space to store the suffix tree is only $O(t\log^k{t})$.
 
-The general idea for the query is that whenever we reach a wildcard, we have to explore both the edge along the centroid path and the wildcard edge. Formally, to perform a query, we begin by dividing the query $p = p_0*p_1*\hdots*p_k$, where each of the segments $p_i$ contain no wildcards. We begin by performing the following steps for $i = 0$, and continue until we have either finished with $i = k$ or have discovered a place where $p$ diverges from $t$.
+The general idea for the query is that whenever we reach a wildcard, we have to explore both the edge along the centroid path and the wildcard edge. Formally, to perform a query, we begin by dividing the query $p = p_0*p_1*\dots*p_k$, where each of the segments $p_i$ contain no wildcards. We begin by performing the following steps for $i = 0$, and continue until we have either finished with $i = k$ or have discovered a place where $p$ diverges from $t$.
 
 \begin{enumerate}
 \item Perform a standard query for $p_i$. Say that this query ends at position $v$ in the tree (which could be a node or along an edge).
@@ -106,8 +115,9 @@ If the query returned locations within the tree, we report all the leaf descenda
 \end{figure*}
 
 \subsection{Cole et al. Solution 2: Centroid Path Decomposition with Fast Query}
+\label{subsec:cpdfast}
 
-In their paper, Cole et. al suggested a way to speed up the query time by using a carefully constructed longest common prefix (LCP) query instead of walking down the tree as we did in Step (1) above. The structure is the same as that described in the previous section. We will need to augment the tree with additional information, but we will be sure that the information never takes more than linear space in the size of the tree. Thus the space is still $O(t\log^k{t})$.
+In their paper, Cole et. al suggested a way (that we called \textsc{CPD-Fast}) to speed up the query time by using a carefully constructed longest common prefix (LCP) query instead of walking down the tree as we did in Step (1) above. The structure is the same as that described in the previous section. We will need to augment the tree with additional information, but we will be sure that the information never takes more than linear space in the size of the tree. Thus the space is still $O(t\log^k{t})$.
 
 This new algorithms calls for preprocessing of $p$ which takes time $O(p)$. The LCP query takes time $O(\log\log{t})$. When we replace Step (1) from above with this LCP query, executing the entire query will take time $O(2^k \log\log{t})$. Thus, the overall time of the query will be $O(p + 2^k\log{\log{t}})$.
 
@@ -122,7 +132,7 @@ Next, the LCP structure needs to support weighted level ancestor (WLA) queries. 
 
 Finally, each leaf in $T$ needs to store the index of its corresponding suffix in lexicographic order in $S$. We will refer to this value as $I_x$, where $l_x$ is some leaf node. Note that we store the index of this suffix in $S$, even though we are currently building a LCP structure on $T$. Then, given the index $I_x$ of a leaf, we need to return the two leaves in $T$ which have indices which are the predecessor and successor of $I_x$. This can be done in $O(\log\log{t})$ by storing the indices of all the leaves of $T$ in a $y$-fast trie.
 
-Recall that we have divided $p$ into $p_0*p_1*\hdots*p_k$. When we receive a query $p$, we perform the following preprocessing for each $p_i$. Our goal is to determine, for each $p_i$, the \textit{index} $g_i$ of $p_i$, and also the leaf with which $p_i$ has the most overlap. We determine this value as follows.
+Recall that we have divided $p$ into $p_0*p_1*\dots*p_k$. When we receive a query $p$, we perform the following preprocessing for each $p_i$. Our goal is to determine, for each $p_i$, the \textit{index} $g_i$ of $p_i$, and also the leaf with which $p_i$ has the most overlap. We determine this value as follows.
 
 \begin{enumerate}
 \item Proceed like a standard query in $S$ for $p_i$, noting the endpoint.
@@ -161,15 +171,84 @@ Steps (2), (5), and (6) take $O(\log\log{t})$, and steps (1), (3), and (4) can b
 
 Now we can perform a query by first preprocessing $p$, and then continuing with the steps outlined in Section 1.5, with the modification that instead of performing a standard query in Step(1) we perform an LCP query. The overall time of this algorithm is then $O(p + 2^k \log\log{t})$.
 
-
-
 \section{Methodology}
+\label{sec:methodology}
 
+\subsection{Implementation of the Approaches}
+We implemented the four approaches in the Java programming language.
+While other languages may yield better performance, our primary objective is to measure relative performance between the approaches rather than strive for an optimal absolute performance.
+Java is the language with which we are most comfortable, and it was therefore a natural choice.
+
+We began by implementing a standard suffix tree to support the \textsc{Slow-Query} approach\footnote{In our code, this is the \path{stringmatch.ds.suffixtree.SuffixTree} class.}.
+Indeed, this is the simplest data structure because the structure itself has no recursion beyond what is in a typical trie; furthermore, the query is a straightforward recursive algorithm.
+To construct the tree, we implemented Ukkonen's algorithm, which is an online algorithm that runs in $O(t)$ time.
+Our implementation of the algorithm was based heavily on a StackOverflow post~\cite{ukkonenstackoverflow} and on an existing implementation~\cite{ukkonengithub}.
+In fact, while we initially believed an online approach would be helpful for later components of the implementation, and thus chose this algorithm, it turned out to not be necessary; any linear-time algorithm for constructing a suffix tree would have sufficed.
+Prior to constructing the tree, we read the input text once and store it once.
+We built a collection of small structures\footnote{In our code, these are in the \path{stringmatch.ds.text} package.} to easily work with substrings of the text, where each substring is simply stored using pointers to the original text.
+Thus, each edge can store a substring of the text with $O(1)$ space, as desired.
+
+We then proceeded by generalizing the standard suffix tree to recursively build wildcard subtrees down to a depth of $k$ wildcards\footnote{In our code, this is the \path{stringmatch.ds.suffixtree.SuffixTreeNaiveBigSpace} class.}.
+This enables us to support the \textsc{Big-Space} approach.
+Like the \textsc{Slow-Query} approach, the queries in this approach are implemented in a relatively straightforward manner using recursion.
+
+We modified the \textsc{Big-Space} data structure to support the \textsc{CPD-Slow} and \textsc{CPD-Fast} structures\footnote{In our code, this is the \path{stringmatch.ds.suffixtree.SuffixTreeeWithCPD} class.}.
+Namely, when we build a wildcard subtree off a node $v$, we copy the entire subtree of $v$ except the part under its centroid edge.
+We then devised and implemented an algorithm (that we call \path{condense}) that recompresses this subtree in linear-time.
+One variant of this structure (\textsc{CPD-Slow}) simply stores these wildcard subtrees and supports queries as described in Section~\ref{subsec:cpdslow}.
+It does not store any extra information with each wildcard subtree beyond what is necessary.
+The second variant of the structure (\textsc{CPD-Fast}) associates with each wildcard subtree information that allow us to perform efficient LCP queries as described in Section~\ref{subsec:cpdfast}.
+
+In particular, for this second variant we implemented from scratch, using 6.851 notes as reference, structures to support LCA queries and WLA queries, as well as a $y$-fast trie to support predecessor and successor queries on indices of a subtree.
+We store these structures in each wildcard subtree\footnote{The LCA and WLA structures can be found directly in the \path{stringmatch.ds.suffixtree.SuffixTreeeWithCPD} class. The $y$-fast trie can be found in the \path{stringmatch.ds.suffixtree.yfasttrie} package.}.
+In implementing each of these structures we needed to support worst-case constant-time lookup in a hash table.
+To do this, we used a Java implementation of Cuckoo hashing found online~\cite{cuckoo}.
+
+\subsection{Measuring Performance of the Approaches}
+
+\subsubsection{Dataset and Trials}
+To measure and compare the perform of the data structures we implemented, we used the Open American National Corpus (OANC)~\cite{oanc}.
+This provided us with 14588048 words.
+We stripped this corpus of all whitespace and other non-alphabetic characters, and converted the remaining characters to uppercase, leaving us with an alphabet size of $\Sigma=26$.
+After this preprocessing, our input text contains a total of 68576990 characters.
+
+There are four parameters that can affect space usage and runtime: $\Sigma$, $p$, $t$, and $k$.
+We always leave $\Sigma$ fixed and usually leave $p$ fixed.
+For most runs we vary $t$ and $k$, and the particular values we use are given in Section~\ref{sec:results}.
+
+Using the OANC dataset, we generate random input to use in evaluation of space usage and runtime.\footnote{In our code, this evaluation suite is in the \path{string match.evaluate.Evaluator} class.}
+In particular, for some fixed collection of the four parameters, we run five ``trials'' on a data structure.
+In each trial, we select a random length $t$ substring of the OANC corpus, and this substring becomes the input text to the data structure being evaluated.
+We build the data structure at each trial and (just on the first trial) determine and record its space usage.
+Then, for the current trial, we randomly select 2000 length $p$ substrings from the input text and, in each of these substrings, replace $k$ random characters with wildcards; these make up our queries.
+We time each query and report the average time across all 10000 queries as the average query time for the data structure being evaluated.
+
+\subsubsection{Instrumentation of Space and Time Resources}
+To measure the space usage of each data structure for varied parameters, we use the Jamm MemoryMeter~\cite{memorymeter}, which acts as a wrapper around Java's Instrumentation package for measuring object size.
+Because of Java's handling of memory, measuring space usage is tricky and we found that the exact space usage of an identical experiment varied notably depending on the machine on which the experiment was being run.
+However, the tool should still provide a rough estimate for considering relative space usage because we are consistent in running the experiments (e.g., on the same machine).
+
+We implement a measurement of average query time for a set of queries by computing the difference in the clock's time over the set of queries.
+However, we encountered substantial difficult after initially implementing this approach and running experiments.
+In particular, the average query time would differ greatly across experiments and would create a nonsensical pattern as we varied a parameter (e.g., it would sometimes be very high for even values of $k$ and low for odd values).
+We eventually narrowed the cause of this problem to Java's memory management --- namely, we determined that its garbage collection would substantially slow arbitrary queries.
+We experimented with some tricks, like calling \path{System.gc()} in between trials, to alleviate these issues, and they helped somewhat.
+However, we determined that one approach to better avoid this issue would be to give Java far more heap space than it would need in building the data structures on our chosen parameter values.
+
+Consequently, we ran our experiments on a large memory instance from Amazon Web Services (AWS).\footnote{In particular, we used its \path{r3.8xlarge} instance, which offers 244 GB of memory.}
+In doing so, we gave Java 200 GB of heap space.
+This led to smoother plots that, we believe, more accurately reflect the query times of the data structures.
+We monitored the process' memory usage to ensure it did not approach the heap limit.
+
+(The figures and data in our May 14, 2014 presentation were generated from runs on one of our personal machines, which has far less available memory.
+The substantial increase in available memory offered by running experiments on AWS also allowed us to experiment with larger parameter values.
+For these reasons, the figures and data in this paper differ from what we showed in our presentation.)
 
 \section{Results}
-
+\label{sec:results}
 
 \section{Discussion}
+\label{sec:discussion}
 
  \begin{thebibliography}{9}
 \bibitem{cole}
@@ -180,6 +259,21 @@ Richard Cole, Lee-Ad Gottlieb, and Moshe Lewenstein.
  
  \bibitem{lec}
  Erik Demaine. Least Common and Level Ancestors. MIT 6.851 Lectures 15 Notes Spring 2014. http://courses.csail.mit.edu/6.851/spring14/lectures/L15.pdf
+ 
+ \bibitem{ukkonenstackoverflow}
+ StackOverflow. \textit{Ukkonen's suffix tree algorithm in plain English?} March 2012 --- May 2013. http://stackoverflow.com/questions/9452701/ukkonens-suffix-tree-algorithm-in-plain-english/
+ 
+ \bibitem{ukkonengithub}
+ Max Garfinkel, GitHub. \textit{A java implementation of Ukkonen's suffix tree creation algorithm.} September 2012. https://github.com/maxgarfinkel/suffixTree/
+ 
+ \bibitem{cuckoo}
+ Keith Schwarz. \textit{Cuckoo-Hashmap.} November 2010 --- December 2013. https://github.com/maxgarfinkel/suffixTree/
+ 
+ \bibitem{oanc}
+ The Open American National Corpus. http://www.anc.org/data/oanc/
+ 
+ \bibitem{memorymeter}
+ Jonathan Ellis. \textit{Java Agent for Memory Measurements.} February 2011 --- May 2014. https://github.com/jbellis/jamm
 \end{thebibliography}
 
 \end{document}
