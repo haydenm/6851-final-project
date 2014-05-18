@@ -53,7 +53,7 @@ Consider the text indexing problem. Given an input text and query string, we wis
 
 While theoretical bounds for each of these solutions have already been established, our goal is to report the performance of each of these solutions in practice. To this end, we implemented each of them in Java. For each solution, we measured the total space and query time for various texts and query patterns, allowing varying numbers of wildcards.
 
-In terms of space, the solutions performed as expected based on their theoretical bounds. Perhaps more interestingly, the actual performances of the query algorithms differed substantially from what was suggested by their theoretical runtimes. In particular, both queries by Cole et. al performed worse than the naive approaches, despite having much better worse case bounds in theory.
+In terms of space, the solutions performed as expected based on their theoretical bounds. Perhaps more interestingly, the actual performances of the query algorithms differed substantially from what was suggested by their theoretical runtimes. In particular, the asymptotically better solution by Cole et. al performed worse than both naive approaches.
 
 \subsection{Organization of the Report}
 
@@ -61,7 +61,7 @@ In section~\ref{sec:survey} we will present an overview of each of the solutions
 
 \subsection{Notation}
 
-Throughout this paper, for ease of notation, we will interchangeably use $t$ to refer to the query text itself and also the length of the query text (and similarly for $p$). We will use $k$ to denote the maximum number of wildcards allowed in a query. Note that because the building of the structures can depend on $k$, we require that this parameter be set beforehand and not dynamically with each query. Finally, we will use $\Sigma$ to denote that size of the alphabet.
+Throughout this paper, for ease of notation, we will interchangeably use $t$ to refer to the query text itself and also the length of the query text (and similarly for $p$). We will use $k$ to denote the maximum number of wildcards allowed in a query. Note that because the building of the structures can depend on $k$, we require that this parameter be set beforehand and not dynamically with each query. Finally, we will use $\Sigma$ to denote the size of the alphabet.
 
 \section{Survey of Solutions to the Text Indexing Problem}
 \label{sec:survey}
@@ -80,7 +80,7 @@ By modifying the suffix tree to store additional information, we can achieve a m
 \fbox{\includegraphics[height = 2in]{figures/bigspace.png}}
 \end{center}
 \label{fig:sample}
-\caption{\small{On the left is the standard suffix tree for $t =$ BANANA. On the right, the suffix tree has been modified to contain a wildcard subtree at the root. Note that the big space, fast query solution discussed in Section 1.4 requires wildcard subtrees be created between every letter.}}
+\caption{\small{On the left is the standard suffix tree for $t =$ BANANA. On the right, the suffix tree has been modified to contain a wildcard subtree at the root. Note that the big space, fast query solution requires wildcard subtrees be created between every letter.}}
 \end{figure*}
 
 \subsection{Cole et al. Solution 1: Centroid Path Decomposition with Slow Query}
@@ -111,7 +111,7 @@ If the query returned locations within the tree, we report all the leaf descenda
 \fbox{\includegraphics[height = 2in]{figures/wildcardcentroid.png}}
 \end{center}
 \label{fig:sample}
-\caption{\small{On the left is the standard suffix tree for $t =$ BANANA. On the right, the suffix tree has been modified to contain a wildcard subtree at the root. Note that the big space, fast query solution requires wildcard subtrees be created between every letter.}}
+\caption{\small{On the left is the standard suffix tree for $t =$ BANANA, with centroid edges highlighted. On the right, the suffix tree has been modified to contain a CPD wildcard subtree at the root.}}
 \end{figure*}
 
 \subsection{Cole et al. Solution 2: Centroid Path Decomposition with Fast Query}
@@ -229,7 +229,7 @@ Because of Java's handling of memory, measuring space usage is tricky and we fou
 However, the tool should still provide a rough estimate for considering relative space usage because we are consistent in running the experiments (e.g., on the same machine).
 
 We implement a measurement of average query time for a set of queries by computing the difference in the clock's time over the set of queries.
-However, we encountered substantial difficult after initially implementing this approach and running experiments.
+However, we encountered substantial difficulty after initially implementing this approach and running experiments.
 In particular, the average query time would differ greatly across experiments and would create a nonsensical pattern as we varied a parameter (e.g., it would sometimes be very high for even values of $k$ and low for odd values).
 We eventually narrowed the cause of this problem to Java's memory management --- namely, we determined that its garbage collection would substantially slow arbitrary queries.
 We experimented with some tricks, like calling \path{System.gc()} in between trials, to alleviate these issues, and they helped somewhat.
