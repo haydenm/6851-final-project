@@ -277,14 +277,15 @@ The time usage of all four structures is shown in Figure~\ref{fig:allfour-time}.
 \end{figure*}
 
 We then seek to plot space usage and runtime individually for each of the data structures, where we now vary both $t$ and $k$.
-For each experiment we again chose a fixed $p$, and a range of values for $t$ and $k$, that allow us to construct the data structures and run queries in a reasonable time.
-
+For each experiment we again chose a fixed $p$, and a range of values for $t$ and $k$ that allow us to construct the data structures and run queries in a reasonable time.
+Plots of the space usage for each of the four solutions are in Figures \ref{fig:space1}, \ref{fig:space2}, \ref{fig:space3}, and \ref{fig:space4}.
+Plots of the average query running time for each of the four solutions are in Figures \ref{fig:time1}, \ref{fig:time2}, \ref{fig:time3}, and \ref{fig:time4}.
 
 \section{Discussion}
 \label{sec:discussion}
 
 In this section we discuss the results of each of our experiments.
-The primary discussion relevant to this paper is in the comparison of the four structures: Section~\ref{subsec:space compare} and Section~\ref{subsec:timecompare}.
+The primary discussion relevant to this paper is in the comparison of the four structures: Section~\ref{subsec:spacecompare} and Section~\ref{subsec:timecompare}.
 The remaining discussion briefly explains the results of the experiments for each individual data structure.
 
 \subsection{Space comparison of all four structures}
@@ -320,49 +321,49 @@ As the number of wildcards in our queries increases, we perform more rooted LCP 
 
 \begin{figure}[ht]
 \centering
-\subfigure[\textsc{Slow-Query} with $t = ??$, $p = ??$, $k ??$]{%
+\subfigure[{\textsc{Slow-Query} with $t$ from $100000$ to $900000$, $p = 100$, $k \in [0, 50]$}]{%
 \fbox{\includegraphics[width = 3in]{figures/plot-slowquery-space.pdf}}
 \label{fig:space1}}
 \quad
-\subfigure[\textsc{Big-Space} with $t= ??$, $p = ??$, $k ??$]{%
+\subfigure[{\textsc{Big-Space} with $t$ from $2000$ to $10000$, $p = 25$, $k \in [0, 12]$}]{%
 \fbox{\includegraphics[width = 3in]{figures/plot-bigspace-space.pdf}}
 \label{fig:space2}}
-\subfigure[\textsc{CPD-Slow} with $t = ??$, $p = ??$, $k ??$]{%
+\subfigure[{\textsc{CPD-Slow} with $t$ from $4000$ to $20000$, $p = 30$, $k \in [0, 14]$}]{%
 \fbox{\includegraphics[width = 3in]{figures/plot-cpdslow-space.pdf}}
 \label{fig:space3}}
 \quad
-\subfigure[\textsc{CPD-Fast} with $t = ??$, $p = ??$, $k ??$]{%
+\subfigure[{\textsc{CPD-Fast} with $t$ from $2000$ to $10000$, $p = 25$, $k \in [0, 12]$}]{%
 \fbox{\includegraphics[width = 3in]{figures/plot-cpdfast-space.pdf}}
 \label{fig:space4}}
 %
-\caption{The figures above show the space usage of each of the different solutions for varying values of $t$ and $k$.}
+\caption{The space usage of each of the different solutions for varying values of $t$ and $k$.}
 \label{fig:figure}
 \end{figure}
 
 \begin{figure}[ht]
 \centering
-\subfigure[\textsc{Slow-Query} with $t = ??$, $p = ??$, $k ??$]{%
+\subfigure[{\textsc{Slow-Query} with $t$ from $100000$ to $900000$, $p = 100$, $k \in [0, 50]$}]{%
 \fbox{\includegraphics[width = 3in]{figures/plot-slowquery-time.pdf}}
 \label{fig:time1}}
 \quad
-\subfigure[\textsc{Big-Space} with $t= ??$, $p = ??$, $k ??$]{%
+\subfigure[{\textsc{Big-Space} with $t$ from $2000$ to $10000$, $p = 25$, $k \in [0, 12]$}]{%
 \fbox{\includegraphics[width = 3in]{figures/plot-bigspace-time.pdf}}
 \label{fig:time2}}
-\subfigure[\textsc{CPD-Slow} with $t = ??$, $p = ??$, $k ??$]{%
+\subfigure[{\textsc{CPD-Slow} with $t$ from $4000$ to $20000$, $p = 30$, $k \in [0, 14]$}]{%
 \fbox{\includegraphics[width = 3in]{figures/plot-cpdslow-time.pdf}}
 \label{fig:time3}}
 \quad
-\subfigure[\textsc{CPD-Fast} with $t = ??$, $p = ??$, $k ??$]{%
+\subfigure[{\textsc{CPD-Fast} with $t$ from $2000$ to $10000$, $p = 25$, $k \in [0, 12]$}]{%
 \fbox{\includegraphics[width = 3in]{figures/plot-cpdfast-time.pdf}}
 \label{fig:time4}}
 %
-\caption{The figures above show the query time of each of the different solutions for varying values of $t$ and $k$.}
+\caption{The average query time of each of the different solutions for varying values of $t$ and $k$.}
 \label{fig:figure}
 \end{figure}
 
 \subsection{Space and time of the \textsc{Slow-Query} structure}
 
-The \textsc{CPD-Slow} solution behaved as expected based on asymptotic runtimes for both space usage and query time. In Figure~\ref{fig:space1}, we can see that the total space has no dependence on $k$ (as expected), and also that the total space increases in equally spaced increments as we increase $n$ by the same amount. In Figure~\ref{fig:time1}, we see that the query time depends exponentially on $k$. This matches our runtime of $O(\Sigma^kp)$. While the runtime does not directly depend on $t$, a larger value of $t$ means more possible occurrences of the query text, and therefore more branching in the query. Thus, we observe that the query time increases as $n$ increases.
+The \textsc{Slow-Query} solution behaved as expected based on asymptotic runtimes for both space usage and query time. In Figure~\ref{fig:space1}, we can see that the total space has no dependence on $k$ (as expected), and also that the total space increases in equally spaced increments as we increase $n$ by the same amount. In Figure~\ref{fig:time1}, we see that the query time depends exponentially on $k$. This matches our runtime of $O(\Sigma^kp)$. While the runtime does not directly depend on $t$, a larger value of $t$ means more possible occurrences of the query text, and therefore more branching in the query. Thus, we observe that the query time increases as $n$ increases.
 
 \subsection{Space and time of the \textsc{Big-Space} structure}
 
@@ -372,9 +373,16 @@ The \textsc{Big-Space} solution also behaved as expected for both space usage an
 The \textsc{CPD-Slow} solution similarly produced reasonable plots. First, in Figure~\ref{fig:space3} we can see that the space usage increases with $k$ and $n$. The increase in space as we increase $k$ is not quite as exponential as we might have expected from the $O(t\log^k{t})$ space analysis, although from \cite{cole} we can see that this bound is not perfectly tight. Thus, the space performance is actually better than anticipated. In Figure~\ref{fig:time3} we see that the query time is exponential in $k$, as expected, with only a small dependence on $n$.
 
 \subsection{Space and time of the \textsc{CPD-Fast} structure}
-The \textsc{CPD-Fast} solution produced the most surprising results. In Figure~\ref{fig:space4}, we see that the space usage is not unexpected. The plot looks very similar to that of that for \textsc{CPD-Slow}, with a slightly steeper slope that is probably caused by the fact that we have to store much more information with this solution. The surprising plot is that in Figure~\ref{fig:time4}, because we see that the query time actually decreases as we increase $k$. A possible explanation for this was offered in Section 5.2.
+The \textsc{CPD-Fast} solution produced the most surprising results. In Figure~\ref{fig:space4}, we see that the space usage is not unexpected. The plot looks very similar to that of that for \textsc{CPD-Slow}, with a slightly steeper slope that is probably caused by the fact that we have to store much more information with this solution. The surprising plot is that in Figure~\ref{fig:time4}, because we see that the query time actually decreases as we increase $k$. A possible explanation for this was offered in Section~\ref{subsec:timecompare}.
 
 \section{Conclusion}
+
+We find that the naive approaches (\textsc{Slow-Query} and \textsc{Big-Space}) perform as expected from theory in both space usage and query time.
+The analysis of the solutions proposed by Cole et al. (\textsc{CPD-Slow} and \textsc{CPD-Fast}) is more involved.
+In particular, the \textsc{CPD-Slow} structure outperforms the \textsc{CPD-Fast} structure in both space usage and in query time for practical parameter values.
+We speculated on reasons for this.
+Furthermore, the \textsc{CPD-Slow} structure has a space usage roughly similar to that of the \textsc{Slow-Query} structure (i.e., very small) and a query time that lies between the times required by the \textsc{Big-Space} and the \textsc{Slow-Query} structures.
+Hence, we conclude that, among the four approaches with which we experimented, the \textsc{CPD-Slow} approach offers the optimal compromise between space and time.
 
  \begin{thebibliography}{9}
 \bibitem{cole}
