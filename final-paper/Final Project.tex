@@ -62,7 +62,17 @@ In section~\ref{sec:survey} we will present an overview of each of the solutions
 
 \subsection{Notation}
 
-Throughout this paper, for ease of notation, we will interchangeably use $t$ to refer to the query text itself and also the length of the query text (and similarly for $p$). We will use $k$ to denote the maximum number of wildcards allowed in a query. Note that because the building of the structures can depend on $k$, we require that this parameter be set beforehand and not dynamically with each query. Finally, we will use $\Sigma$ to denote the size of the alphabet.
+Throughout this paper, for ease of notation, we will interchangeably use $t$ to refer to the query text itself and also the length of the query text (and similarly for $p$). We will use $k$ to denote the maximum number of wildcards allowed in a query. Note that because the building of the structures can depend on $k$, we require that this parameter be set beforehand and not dynamically with each query. We will use $\Sigma$ to denote the size of the alphabet. Finally, we will use the symbol $*$ to denote a wildcard.
+
+\begin{figure*}[!t]
+\begin{center}
+\fbox{\includegraphics[height = 2in]{figures/banana.png}}
+\fbox{\includegraphics[height = 2in]{figures/bigspace.png}}
+\end{center}
+\label{fig:sample}
+\caption{\small{On the left is the standard suffix tree for $t =$ BANANA. On the right, the suffix tree has been modified to contain a wildcard subtree at the root. Note that the big space, fast query solution requires wildcard subtrees be created between every letter.}}
+\end{figure*}
+
 
 \section{Survey of Solutions to the Text Indexing Problem}
 \label{sec:survey}
@@ -75,13 +85,14 @@ This solution uses only a standard suffix tree $S$ on $t$. To perform the query,
 
 By modifying the suffix tree to store additional information, we can achieve a much faster query time. For this solution, we modify each node $v$ to contain an edge to a wildcard subtree. This edge will represent the wildcard. We build a suffix tree from all the suffixes represented below $v$, skipping over the first letter of each suffix. We build these wildcard subtrees recursively, such that each root-to-leaf path contains at most $k$ wildcards. Note that building these subtrees will involve splitting edges, because we need to have the option to match a wildcard instead of any given letter. Figure 1.1 shows an example suffix tree with a single wildcard tree built. With these wildcard subtrees, we have a query time of $O(p)$. However, the space required to store this tree is $O(t^{1 + k})$.  We will refer to this solution as the \textsc{Big-Space} approach.
 
+
 \begin{figure*}[!t]
 \begin{center}
-\fbox{\includegraphics[height = 2in]{figures/banana.png}}
-\fbox{\includegraphics[height = 2in]{figures/bigspace.png}}
+\fbox{\includegraphics[height = 2in]{figures/centroid.png}}
+\fbox{\includegraphics[height = 2in]{figures/wildcardcentroid.png}}
 \end{center}
 \label{fig:sample}
-\caption{\small{On the left is the standard suffix tree for $t =$ BANANA. On the right, the suffix tree has been modified to contain a wildcard subtree at the root. Note that the big space, fast query solution requires wildcard subtrees be created between every letter.}}
+\caption{\small{On the left is the standard suffix tree for $t =$ BANANA, with centroid edges highlighted. On the right, the suffix tree has been modified to contain a CPD wildcard subtree at the root.}}
 \end{figure*}
 
 \subsection{Cole et al. Solution 1: Centroid Path Decomposition with Slow Query}
@@ -106,14 +117,6 @@ The general idea for the query is that whenever we reach a wildcard, we have to 
 
 If the query returned locations within the tree, we report all the leaf descendants of those locations as matches. For each wildcard, we might branch and explore two different edges. Thus, the total time for this query is $O(2^kp)$.
 
-\begin{figure*}[!t]
-\begin{center}
-\fbox{\includegraphics[height = 2in]{figures/centroid.png}}
-\fbox{\includegraphics[height = 2in]{figures/wildcardcentroid.png}}
-\end{center}
-\label{fig:sample}
-\caption{\small{On the left is the standard suffix tree for $t =$ BANANA, with centroid edges highlighted. On the right, the suffix tree has been modified to contain a CPD wildcard subtree at the root.}}
-\end{figure*}
 
 \subsection{Cole et al. Solution 2: Centroid Path Decomposition with Fast Query}
 \label{subsec:cpdfast}
@@ -170,7 +173,7 @@ Finally, we need to handle the case where we want to perform an LCP query on a n
 
 Steps (2), (5), and (6) take $O(\log\log{t})$, and steps (1), (3), and (4) can be done in constant time. Thus, we have an overall LCP query time of $O(\log\log{t})$ for any node.
 
-Now we can perform a query by first preprocessing $p$, and then continuing with the steps outlined in Section 1.5, with the modification that instead of performing a standard query in Step(1) we perform an LCP query. The overall time of this algorithm is then $O(p + 2^k \log\log{t})$.
+Now we can perform a query by first preprocessing $p$, and then continuing with the steps outlined in Section 1.5, with the modification that instead of performing a standard query in Step (1) we perform an LCP query. The overall time of this algorithm is then $O(p + 2^k \log\log{t})$.
 
 \section{Methodology}
 \label{sec:methodology}
@@ -284,7 +287,7 @@ For each experiment we again chose a fixed $p$, and a range of values for $t$ an
 \label{sec:discussion}
 
 In this section we discuss the results of each of our experiments.
-The primary discussion relevant to this paper is in the comparison of the four structures: Section~\ref{subsec:space compare} and Section~\ref{subsec:timecompare}.
+The primary discussion relevant to this paper is in the comparison of the four structures: Section~\ref{subsec:spacecompare} and Section~\ref{subsec:timecompare}.
 The remaining discussion briefly explains the results of the experiments for each individual data structure.
 
 \subsection{Space comparison of all four structures}
@@ -384,7 +387,7 @@ Richard Cole, Lee-Ad Gottlieb, and Moshe Lewenstein.
  pages 91--100, 2004.
  
  \bibitem{lec}
- Erik Demaine. Least Common and Level Ancestors. MIT 6.851 Lectures 15 Notes Spring 2014. http://courses.csail.mit.edu/6.851/spring14/lectures/L15.pdf
+ Erik Demaifne. Least Common and Level Ancestors. MIT 6.851 Lectures 15 Notes Spring 2014. http://courses.csail.mit.edu/6.851/spring14/lectures/L15.pdf
  
  \bibitem{ukkonenstackoverflow}
  StackOverflow. \textit{Ukkonen's suffix tree algorithm in plain English?} March 2012 --- May 2013. http://stackoverflow.com/questions/9452701/ukkonens-suffix-tree-algorithm-in-plain-english/
