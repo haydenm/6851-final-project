@@ -7,6 +7,7 @@
 \usepackage{geometry}
 \geometry{verbose, margin = 1in}
 \usepackage{amsthm}
+\usepackage{amsmath}
 \usepackage{tikz}
 \usepackage{array}
 \usetikzlibrary{arrows}
@@ -50,15 +51,15 @@
 
 \section{Introduction}
 
-Consider the text indexing problem. Given an input text and query string, we wish to report all the indices of the input text to which the query string matches. In this paper we will consider a generalized version of this problem, in which we allow the query string to contain \textit{wildcards}. A wildcard is a character which can be matched to any other character. We will discuss four possible approaches to this problem. The first two are naive solutions, one of which uses little space but has a slow query time, and the other which has a fast query time but uses a lot of space. Then, we will discuss two approaches presented by Cole et. al in 2004 \cite{cole}.
+Consider the text indexing problem. Given an input text and query string, we wish to report all the indices of the input text to which the query string matches. In this paper we will consider a generalized version of this problem, in which we allow the query string to contain \textit{wildcards}. A wildcard is a character which can be matched to any other character. We will discuss four possible approaches to this problem. The first two are naive solutions, one of which uses little space but has a slow query time, and the other which has a fast query time but uses a lot of space. Then, we discuss two approaches presented by Cole et al. in 2004 \cite{cole}.
 
-While theoretical bounds for each of these solutions have already been established, our goal is to report the performance of each of these solutions in practice. To this end, we implemented each of them in Java. For each solution, we measured the total space and query time for various texts and query patterns, allowing varying numbers of wildcards.
+While theoretical bounds for each of these solutions have already been established, our goal is to report the performance of each of these solutions in practice. To this end, we implemented each of them in Java. For each solution, we measure the total space and query time for various texts and query patterns, allowing varying numbers of wildcards.
 
-In terms of space, the solutions performed as expected based on their theoretical bounds. Perhaps more interestingly, the actual performances of the query algorithms differed substantially from what was suggested by their theoretical runtimes. In particular, the asymptotically better solution by Cole et. al performed worse than both naive approaches.
+In terms of space, the solutions perform as expected based on their theoretical bounds. Perhaps more interestingly, the actual query time performance of the query algorithms differ substantially from what we expected based on their theoretical runtimes. In particular, the full structure and final solution developed by Cole et al. performs worse in query time than both naive approaches, and also performs worse than a watered-down, introductory solution offered by Cole et al.
 
 \subsection{Organization of the Report}
 
-In section~\ref{sec:survey} we will present an overview of each of the solutions as well as their theoretical bounds. In Section~\ref{sec:methodology}, we will discuss the details of the implementation of our structures and the methods we used to measure their performance. In Section~\ref{sec:results}, we present the results of our experimentation, and finally in section~\ref{sec:discussion} we discuss the underlying reasons for and implications of these results.
+In section~\ref{sec:survey} we present an overview of each of the solutions as well as their theoretical bounds. In Section~\ref{sec:methodology}, we discuss the details of the implementation of our structures and the methods we used to measure their performance. In Section~\ref{sec:results}, we present the results of our experimentation, and finally in section~\ref{sec:discussion} we discuss the underlying reasons for and implications of these results.
 
 \subsection{Notation}
 
@@ -79,11 +80,11 @@ Throughout this paper, for ease of notation, we will interchangeably use $t$ to 
 
 \subsection{Naive Solution 1: Small Space, Slow Query}
 
-This solution uses only a standard suffix tree $S$ on $t$. To perform the query, we perform a standard query on the suffix tree, with the addition that each time we come across a wildcard in $p$, we branch and explore all possible subtrees. The space for this solution is clearly $O(t)$, and the time for a query is $O(\Sigma^kp)$. The $\Sigma^k$ term arises from the fact that we may have to fully explore every subtree of a node each time we reach a wildcard. We will refer to this solution as the \textsc{Slow-Query} approach.
+This solution uses only a standard suffix tree $S$ on $t$. To perform the query, we perform a standard query on the suffix tree, with the addition that each time we come across a wildcard in $p$, we branch and explore all possible subtrees. The space for this solution is clearly $O(t)$, and the time for a query is $O(\Sigma^kp + \text{\# match})$, where $\text{\# match}$ is the number of matches of the query. The $\Sigma^k$ term arises from the fact that we may have to fully explore every subtree of a node each time we reach a wildcard. We will refer to this solution as the \textsc{Slow-Query} approach.
 
 \subsection{Naive Solution 2: Big Space, Fast Query}
 
-By modifying the suffix tree to store additional information, we can achieve a much faster query time. For this solution, we modify each node $v$ to contain an edge to a wildcard subtree. This edge will represent the wildcard. We build a suffix tree from all the suffixes represented below $v$, skipping over the first letter of each suffix. We build these wildcard subtrees recursively, such that each root-to-leaf path contains at most $k$ wildcards. Note that building these subtrees will involve splitting edges, because we need to have the option to match a wildcard instead of any given letter. Figure 1.1 shows an example suffix tree with a single wildcard tree built. With these wildcard subtrees, we have a query time of $O(p)$. However, the space required to store this tree is $O(t^{1 + k})$.  We will refer to this solution as the \textsc{Big-Space} approach.
+By modifying the suffix tree to store additional information, we can achieve a much faster query time. For this solution, we modify each node $v$ to contain an edge to a wildcard subtree. This edge will represent the wildcard. We build a suffix tree from all the suffixes represented below $v$, skipping over the first letter of each suffix. We build these wildcard subtrees recursively, such that each root-to-leaf path contains at most $k$ wildcards. Note that building these subtrees involves splitting edges, because we need to have the option to match a wildcard instead of any given letter. Figure~\ref{fig:sample1} shows an example suffix tree with a single wildcard tree built. With these wildcard subtrees, we have a query time of $O(p + \text{\# match})$. However, the space required to store this tree is $O(t^{1 + k})$.  We will refer to this solution as the \textsc{Big-Space} approach.
 
 
 \begin{figure*}[!t]
@@ -98,7 +99,7 @@ By modifying the suffix tree to store additional information, we can achieve a m
 \subsection{Cole et al. Solution 1: Centroid Path Decomposition with Slow Query}
 \label{subsec:cpdslow}
 
-In 2004, Cole et al. provided a solution (that we call \textsc{CPD-Slow}) to this problem which achieves faster query time that the first solution, but less space than the second solution. In order to achieve this, the suffix tree is first decomposed into \textit{centroid paths}. The centroid path from the root to one of its descendant leaves is the path which follows the edges with the most descendant leaves (breaking ties arbitrarily). For nodes hanging off of this centroid path, centroid paths are created recursively. The centroid edge of a node is the outgoing edge of the node which lies along a centroid path. By construction, each node has exactly one centroid edge. Figure 1.2 shows the centroid path decomposition of an example suffix tree.
+In 2004, Cole et al. provide a solution (that we call \textsc{CPD-Slow}) to this problem which achieves faster query time that the first solution, but less space than the second solution. In order to achieve this, the suffix tree is first decomposed into \textit{centroid paths}. The centroid path from the root to one of its descendant leaves is the path which follows the edges with the most descendant leaves (breaking ties arbitrarily). For nodes hanging off of this centroid path, centroid paths are created recursively. The centroid edge of a node is the outgoing edge of the node which lies along a centroid path. By construction, each node has exactly one centroid edge. Figure~\ref{fig:sample2} shows the centroid path decomposition of an example suffix tree.
 
 Like the big space solution described above, the Centroid Path Decomposition (CPD) solution builds wildcard subtrees. However, the wildcard subtrees only include suffixes below the node which do not lie along the centroid edge of that node. With this construction, the space to store the suffix tree is only $O(t\log^k{t})$.
 
@@ -115,28 +116,27 @@ The general idea for the query is that whenever we reach a wildcard, we have to 
 \item Otherwise $v$ is a point along an edge. Advance one character along the edge and then recurse from that location on $p_{i + 1}$.
 \end{enumerate}
 
-If the query returned locations within the tree, we report all the leaf descendants of those locations as matches. For each wildcard, we might branch and explore two different edges. Thus, the total time for this query is $O(2^kp)$.
-
+If the query returns locations within the tree, we report all the leaf descendants of those locations as matches. For each wildcard, we might branch and explore two different edges. Thus, the total time for this query is $O(2^kp + \text{\# match})$.
 
 \subsection{Cole et al. Solution 2: Centroid Path Decomposition with Fast Query}
 \label{subsec:cpdfast}
 
-In their paper, Cole et. al suggested a way (that we called \textsc{CPD-Fast}) to speed up the query time by using a carefully constructed longest common prefix (LCP) query instead of walking down the tree as we did in Step (1) above. The structure is the same as that described in the previous section. We will need to augment the tree with additional information, but we will be sure that the information never takes more than linear space in the size of the tree. Thus the space is still $O(t\log^k{t})$.
+In their paper, Cole et. al suggest a way (that we called \textsc{CPD-Fast}) to speed up the query time by using a carefully constructed longest common prefix (LCP) query instead of walking down the tree as we did in Step (1) above. The structure is the same as that described in the previous section. We will need to augment the tree with additional information, but we will be sure that the information never takes more than linear space in the size of the tree. Thus the space is still $O(t\log^k{t})$.
 
-This new algorithms calls for preprocessing of $p$ which takes time $O(p)$. The LCP query takes time $O(\log\log{t})$. When we replace Step (1) from above with this LCP query, executing the entire query will take time $O(2^k \log\log{t})$. Thus, the overall time of the query will be $O(p + 2^k\log{\log{t}})$.
+This new algorithm calls for preprocessing of $p$ which takes time $O(p)$. The LCP query takes time $O(\log\log{t})$. When we replace Step (1) from above with this LCP query, executing the entire query takes time $O(2^k \log\log{t} + \text{\# match})$. Thus, the overall time of the query will be $O(p + 2^k\log{\log{t}} + \text{\# match})$.
 
 Let $S$ be the original suffix tree on $t$. In order to be able to answer LCP queries, we need to build some structures into our suffix tree. We will refer to these structures collectively as the LCP structure. An LCP structure needs to be built for each subtree hanging off a centroid path. All LCP structures are built as part of the preprocessing of the text.
 
-Next we describe the LCP query. Formally, the LCP query takes a node $r$ and query text $p_i$ (with no wildcards), and returns the location $v$ which corresponds to the deepest location at which $p_i$ could be matched, starting at $r$. For now, we will assume that the subtree rooted at $r$ contains its own LCP structure. Because we don't build an LCP structure on every subtree, this may not actually be the case. After we describe the query, we will describe how to handle the case where $r$ is not at the root of some LCP structure.
+Next we describe the LCP query. Formally, the LCP query takes a node $r$ and query text $p_i$ (with no wildcards), and returns the location $v$ which corresponds to the deepest location at which $p_i$ could be matched, starting at $r$. For now, we will assume that the subtree rooted at $r$ contains its own LCP structure. Because we don't build an LCP structure on every subtree, this may not actually be the case; after we describe the query, we will describe how to handle the case where $r$ is not at the root of some LCP structure.
 
 
 Let $T$ be an arbitrary subtree on which we are building the LCP structure. First, the LCP structure on $T$ needs to be able to return the LCA (least common ancestor) of any two nodes in $T$. This can be done in space $O(|T|)$ with constant time queries using the techniques described in \cite{lec}.
 
 Next, the LCP structure needs to support weighted level ancestor (WLA) queries. Given a node $v$ and a height $h$, a WLA query should return the position at height $h$ above $v$ in $T$. The (unweighted) level ancestor problem can be solved in constant time and $O(|T|)$ space \cite{lec}. The same ideas can be used to solve the weighted level ancestor problem, but the query time increases to $O(\log\log{t})$ due to the need to make a predecessor query.
 
-Finally, each leaf in $T$ needs to store the index of its corresponding suffix in lexicographic order in $S$. We will refer to this value as $I_x$, where $l_x$ is some leaf node. Note that we store the index of this suffix in $S$, even though we are currently building a LCP structure on $T$. Then, given the index $I_x$ of a leaf, we need to return the two leaves in $T$ which have indices which are the predecessor and successor of $I_x$. This can be done in $O(\log\log{t})$ by storing the indices of all the leaves of $T$ in a $y$-fast trie.
+Finally, each leaf in $T$ needs to store the index of its corresponding suffix in lexicographic order in $S$. We will refer to this value as $I_x$, where $l_x$ is some leaf node. Note that we store the index of this suffix in $S$, even though we are currently building a LCP structure on $T$. Then, given the index $I_x$ of a leaf, we need to return the two leaves in $T$ which have indices that are the predecessor and successor of $I_x$. This can be done in $O(\log\log{t})$ by storing the indices of all the leaves of $T$ in a $y$-fast trie.
 
-Recall that we have divided $p$ into $p_0*p_1*\dots*p_k$. When we receive a query $p$, we perform the following preprocessing for each $p_i$. Our goal is to determine, for each $p_i$, the \textit{index} $g_i$ of $p_i$, and also the leaf with which $p_i$ has the most overlap. We determine this value as follows.
+Recall that we have divided $p$ into $p_0*p_1*\dots*p_k$. When we receive a query $p$, we perform the following preprocessing for each $p_i$. Our goal is to determine, for each $p_i$, the \textit{index} $g_i$ of $p_i$, and also the leaf with which $p_i$ has the most overlap. The index $g_i$ of $p_i$ is the lexicographic position that would be assigned to $p_i$ if it were in $S$. We determine this value as follows.
 
 \begin{enumerate}
 \item Proceed like a standard query in $S$ for $p_i$, noting the endpoint.
@@ -156,7 +156,7 @@ It takes $O(p_i)$ to perform the preprocessing for any given $p_i$, so the total
 
 Steps (1) and (5) take $O(\log\log{t})$ due to the structures described above, and Steps (2), (3), and (4) take constant time. Thus, the overall time to complete this query is $O(\log\log{t})$.
 
-Finally, we need to handle the case where we want to perform an LCP query on a node $r$ which is not at the root of an LCP structure. To perform this query, we will carefully choose a descendant node which is the root of an LCP structure, and then perform the LCP query from there. Let $T$ be the subtree which is rooted at the nearest ancestor of $r$ with a LCP structure. We perform an LCP query on a node not at the root of an LCP structure as follows.
+Finally, we need to handle the case where we want to perform an LCP query on a node $r$ which is not at the root of an LCP structure. To perform this query, we will carefully choose a descendant node which is the root of an LCP structure, and then perform the LCP query from there. Let $T$ be the subtree which is rooted at the nearest ancestor of $r$ with a LCP structure. We perform, as follows, an LCP query on a node that is not at the root of an LCP structure.
 
 \begin{enumerate}
 \item Let $C$ be the centroid path in $T$ which contains $r$ (each node stores a pointer to its centroid path).
@@ -173,7 +173,7 @@ Finally, we need to handle the case where we want to perform an LCP query on a n
 
 Steps (2), (5), and (6) take $O(\log\log{t})$, and steps (1), (3), and (4) can be done in constant time. Thus, we have an overall LCP query time of $O(\log\log{t})$ for any node.
 
-Now we can perform a query by first preprocessing $p$, and then continuing with the steps outlined in Section 1.5, with the modification that instead of performing a standard query in Step (1) we perform an LCP query. The overall time of this algorithm is then $O(p + 2^k \log\log{t})$.
+Now we can perform a query by first preprocessing $p$, and then continuing with the steps outlined in Section~\ref{subsec:cpdslow}, with the modification that instead of performing a standard query in Step (1) we perform an LCP query. The overall time of this algorithm is then $O(p + 2^k \log\log{t} + \text{\# match})$.
 
 \section{Methodology}
 \label{sec:methodology}
@@ -198,7 +198,7 @@ Like the \textsc{Slow-Query} approach, the queries in this approach are implemen
 
 We modified the \textsc{Big-Space} data structure to support the \textsc{CPD-Slow} and \textsc{CPD-Fast} structures\footnote{In our code, this is the \path{stringmatch.ds.suffixtree.SuffixTreeeWithCPD} class.}.
 Namely, when we build a wildcard subtree off a node $v$, we copy the entire subtree of $v$ except the part under its centroid edge.
-We then devised and implemented an algorithm (that we call \path{condense}) that recompresses this subtree in linear-time.
+We then devised and implemented an algorithm (that we call \path{condense}\footnote{In our code, this is implemented in the \path{stringmatch.ds.suffixtree.Node} class.}) that recompresses this subtree in linear-time.
 One variant of this structure (\textsc{CPD-Slow}) simply stores these wildcard subtrees and supports queries as described in Section~\ref{subsec:cpdslow}.
 It does not store any extra information with each wildcard subtree beyond what is necessary.
 The second variant of the structure (\textsc{CPD-Fast}) associates with each wildcard subtree information that allow us to perform efficient LCP queries as described in Section~\ref{subsec:cpdfast}.
@@ -242,10 +242,11 @@ However, we determined that one approach to better avoid this issue would be to 
 Consequently, we ran our experiments on a large memory instance from Amazon Web Services (AWS).\footnote{In particular, we used its \path{r3.8xlarge} instance, which offers 244 GB of memory.}
 In doing so, we gave Java 200 GB of heap space.
 This led to smoother plots that, we believe, more accurately reflect the query times of the data structures.
-We monitored the process' memory usage to ensure it did not approach the heap limit.
+We monitored the process' memory usage to ensure they did not approach the heap limit.
 
 (The figures and data in our May 14, 2014 presentation were generated from runs on one of our personal machines, which has far less available memory.
-The substantial increase in available memory offered by running experiments on AWS also allowed us to experiment with larger parameter values.
+This created some nonsensical plots.
+Also, the substantial increase in available memory offered by running experiments on AWS allowed us to experiment with larger parameter values.
 For these reasons, the figures and data in this paper differ from what we showed in our presentation.)
 
 \section{Results}
@@ -303,7 +304,7 @@ However, the space usage of the \textsc{Big-Space} structure ultimately exceeds 
 \subsection{Query time comparison of all four structures}
 \label{subsec:timecompare}
 
-The average query time comparison of all four structures, shown in Figure~\ref{fig:allfour-time}, does not fit as closely with what we would expected from the theoretical bounds on runtime, but can be explained in practice.
+The average query time comparison of all four structures, shown in Figure~\ref{fig:allfour-time}, does not fit as closely with what we would expect from the theoretical bounds on runtime, but can be explained in practice.
 Note that the growth and ordering of query times on the \textsc{Slow-Query}, \textsc{Big-Space}, and \textsc{CPD-Slow} structures are indeed in accordance with what we would expect from theory.
 
 However, the query time on the \textsc{CPD-Fast} structure is surprising.
@@ -311,8 +312,8 @@ In particular, it is slower than the others (namely, slower than \textsc{Slow-Qu
 We believe it is slower than the other structures for two reasons.
 First, there is substantial overhead, in terms of constant factors, incurred in performing LCP queries; this overhead is a part of the \textsc{CPD-Fast} structure, but not the \textsc{CPD-Slow} structure.
 Second, we can compare the asymptotic runtimes of queries on the \textsc{CPD-Fast} structure and the \textsc{CPD-Slow} structure.
-A query on the \textsc{CPD-Fast} structure runs in $O(p + 2^k \log \log t)$ time and a query on the \textsc{CPD-Slow} structure runs in $O(2^k p)$ time.
-Hence, we would only expect queries on the \textsc{CPD-Fast} structure to be faster than those on the \textsc{CPD-Slow} structure if $\log \log t$ is smaller than $p$.
+A query on the \textsc{CPD-Fast} structure runs in $O(p + 2^k \log \log t)$ time and a query on the \textsc{CPD-Slow} structure runs in $O(2^k p)$ time.\footnote{For clarity, in the remainder of the discussion we will omit the ``$+ \text{\# match}$'' from the asymptotic runtime.}
+Hence, we would only expect queries on the \textsc{CPD-Fast} structure to be faster than those on the \textsc{CPD-Slow} structure if, roughly speaking, $\log \log t$ is smaller than $p$.
 However, for the values of $t$ and $p$ we use (as well as for any reasonable choices), there is not a substantial difference between these values (i.e., they are within a factor of about 10).
 
 Additionally, the plot for the query time on the \textsc{CPD-Fast} structure is surprising because the query time decreases as $k$ increases.
@@ -366,14 +367,14 @@ As the number of wildcards in our queries increases, we perform more rooted LCP 
 
 \subsection{Space and time of the \textsc{Slow-Query} structure}
 
-The \textsc{Slow-Query} solution behaved as expected based on asymptotic runtimes for both space usage and query time. In Figure~\ref{fig:space1}, we can see that the total space has no dependence on $k$ (as expected), and also that the total space increases in equally spaced increments as we increase $n$ by the same amount. In Figure~\ref{fig:time1}, we see that the query time depends exponentially on $k$. This matches our runtime of $O(\Sigma^kp)$. While the runtime does not directly depend on $t$, a larger value of $t$ means more possible occurrences of the query text, and therefore more branching in the query. Thus, we observe that the query time increases as $n$ increases.
+The \textsc{Slow-Query} solution behaved as expected based on asymptotic runtimes for both space usage and query time. In Figure~\ref{fig:space1}, we can see that the total space has no dependence on $k$ (as expected), and also that the total space increases in equally spaced increments as we increase $t$ by the same amount. In Figure~\ref{fig:time1}, we see that the query time depends exponentially on $k$. This matches our runtime of $O(\Sigma^kp)$. While the runtime does not directly depend on $t$, a larger value of $t$ means there are more possible occurrences of the query text, and therefore more branching occurs when searching for the query. Thus, we observe that the query time increases as $t$ increases.
 
 \subsection{Space and time of the \textsc{Big-Space} structure}
 
-The \textsc{Big-Space} solution also behaved as expected for both space usage and query time. We see in Figure~\ref{fig:space2} that space usage increases exponentially with $k$ and also increases for increasing $n$. In Figure~\ref{fig:time2}, we see that the query time has very little dependance on $k$, which is expected from the $O(p)$ runtime. The slight upward trend can be explained by the fact that we only decide to search along a wildcard edge once we have checked all the other edges and found no match, and therefore when we have to search many more wildcard edges, the runtime increases slightly.
+The \textsc{Big-Space} solution also behaved as expected for both space usage and query time. We see in Figure~\ref{fig:space2} that space usage increases exponentially with $k$ and also increases for increasing $t$. In Figure~\ref{fig:time2}, we see that the query time has very little dependence on $k$, which is expected from the $O(p)$ runtime. The slight upward trend can be explained by the fact that we only decide to search along a wildcard edge once we have checked all the other edges and found no match; therefore, when we have more wildcards, we have to iterate through more edges, so the runtime increases slightly.
 
 \subsection{Space and time of the \textsc{CPD-Slow} structure}
-The \textsc{CPD-Slow} solution similarly produced reasonable plots. First, in Figure~\ref{fig:space3} we can see that the space usage increases with $k$ and $n$. The increase in space as we increase $k$ is not quite as exponential as we might have expected from the $O(t\log^k{t})$ space analysis, although from \cite{cole} we can see that this bound is not perfectly tight. Thus, the space performance is actually better than anticipated. In Figure~\ref{fig:time3} we see that the query time is exponential in $k$, as expected, with only a small dependence on $n$.
+The \textsc{CPD-Slow} solution similarly produced reasonable plots. First, in Figure~\ref{fig:space3} we can see that the space usage increases with $k$ and $t$. The increase in space as we increase $k$ is not quite as exponential as we might have expected from the $O(t\log^k{t})$ space analysis, although from \cite{cole} we can see that this bound is not perfectly tight. Thus, the space performance is actually better than anticipated. In Figure~\ref{fig:time3} we see that the query time is exponential in $k$, as expected, with only a small dependence on $t$.
 
 \subsection{Space and time of the \textsc{CPD-Fast} structure}
 The \textsc{CPD-Fast} solution produced the most surprising results. In Figure~\ref{fig:space4}, we see that the space usage is not unexpected. The plot looks very similar to that of that for \textsc{CPD-Slow}, with a slightly steeper slope that is probably caused by the fact that we have to store much more information with this solution. The surprising plot is that in Figure~\ref{fig:time4}, because we see that the query time actually decreases as we increase $k$. A possible explanation for this was offered in Section~\ref{subsec:timecompare}.
