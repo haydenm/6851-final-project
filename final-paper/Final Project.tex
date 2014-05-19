@@ -322,20 +322,20 @@ As the number of wildcards in our queries increases, we perform more rooted LCP 
 \centering
 \subfigure[\textsc{Slow-Query} with $t = ??$, $p = ??$, $k ??$]{%
 \fbox{\includegraphics[width = 3in]{figures/plot-slowquery-space.pdf}}
-\label{fig:subfigure1}}
+\label{fig:space1}}
 \quad
 \subfigure[\textsc{Big-Space} with $t= ??$, $p = ??$, $k ??$]{%
 \fbox{\includegraphics[width = 3in]{figures/plot-bigspace-space.pdf}}
-\label{fig:subfigure2}}
+\label{fig:space2}}
 \subfigure[\textsc{CPD-Slow} with $t = ??$, $p = ??$, $k ??$]{%
 \fbox{\includegraphics[width = 3in]{figures/plot-cpdslow-space.pdf}}
-\label{fig:subfigure3}}
+\label{fig:space3}}
 \quad
 \subfigure[\textsc{CPD-Fast} with $t = ??$, $p = ??$, $k ??$]{%
-\fbox{\includegraphics[width = 3in]{figures/plot-bigspace-space.pdf}}
-\label{fig:subfigure4}}
+\fbox{\includegraphics[width = 3in]{figures/plot-cpdfast-space.pdf}}
+\label{fig:space4}}
 %
-\caption{The figures above show the space usage of each of the different solutions for varying values of $n$ and $k$.}
+\caption{The figures above show the space usage of each of the different solutions for varying values of $t$ and $k$.}
 \label{fig:figure}
 \end{figure}
 
@@ -343,34 +343,38 @@ As the number of wildcards in our queries increases, we perform more rooted LCP 
 \centering
 \subfigure[\textsc{Slow-Query} with $t = ??$, $p = ??$, $k ??$]{%
 \fbox{\includegraphics[width = 3in]{figures/plot-slowquery-time.pdf}}
-\label{fig:subfigure1}}
+\label{fig:time1}}
 \quad
 \subfigure[\textsc{Big-Space} with $t= ??$, $p = ??$, $k ??$]{%
 \fbox{\includegraphics[width = 3in]{figures/plot-bigspace-time.pdf}}
-\label{fig:subfigure2}}
+\label{fig:time2}}
 \subfigure[\textsc{CPD-Slow} with $t = ??$, $p = ??$, $k ??$]{%
 \fbox{\includegraphics[width = 3in]{figures/plot-cpdslow-time.pdf}}
-\label{fig:subfigure3}}
+\label{fig:time3}}
 \quad
 \subfigure[\textsc{CPD-Fast} with $t = ??$, $p = ??$, $k ??$]{%
-\fbox{\includegraphics[width = 3in]{figures/plot-bigspace-time.pdf}}
-\label{fig:subfigure4}}
+\fbox{\includegraphics[width = 3in]{figures/plot-cpdfast-time.pdf}}
+\label{fig:time4}}
 %
-\caption{The figures above show the space usage of each of the different solutions for varying values of $n$ and $k$.}
+\caption{The figures above show the query time of each of the different solutions for varying values of $t$ and $k$.}
 \label{fig:figure}
 \end{figure}
 
 \subsection{Space and time of the \textsc{Slow-Query} structure}
-% a few sentences
+
+The \textsc{CPD-Slow} solution behaved as expected based on asymptotic runtimes for both space usage and query time. In Figure~\ref{fig:space1}, we can see that the total space has no dependence on $k$ (as expected), and also that the total space increases in equally spaced increments as we increase $n$ by the same amount. In Figure~\ref{fig:time1}, we see that the query time depends exponentially on $k$. This matches our runtime of $O(\Sigma^kp)$. While the runtime does not directly depend on $t$, a larger value of $t$ means more possible occurrences of the query text, and therefore more branching in the query. Thus, we observe that the query time increases as $n$ increases.
 
 \subsection{Space and time of the \textsc{Big-Space} structure}
-% a few sentences
+
+The \textsc{Big-Space} solution also behaved as expected for both space usage and query time. We see in Figure~\ref{fig:space2} that space usage increases exponentially with $k$ and also increases for increasing $n$. In Figure~\ref{fig:time2}, we see that the query time has very little dependance on $k$, which is expected from the $O(p)$ runtime. The slight upward trend can be explained by the fact that we only decide to search along a wildcard edge once we have checked all the other edges and found no match, and therefore when we have to search many more wildcard edges, the runtime increases slightly.
 
 \subsection{Space and time of the \textsc{CPD-Slow} structure}
-% a few sentences
+The \textsc{CPD-Slow} solution similarly produced reasonable plots. First, in Figure~\ref{fig:space3} we can see that the space usage increases with $k$ and $n$. The increase in space as we increase $k$ is not quite as exponential as we might have expected from the $O(t\log^k{t})$ space analysis, although from \cite{cole} we can see that this bound is not perfectly tight. Thus, the space performance is actually better than anticipated. In Figure~\ref{fig:time3} we see that the query time is exponential in $k$, as expected, with only a small dependence on $n$.
 
 \subsection{Space and time of the \textsc{CPD-Fast} structure}
-% a few sentences
+The \textsc{CPD-Fast} solution produced the most surprising results. In Figure~\ref{fig:space4}, we see that the space usage is not unexpected. The plot looks very similar to that of that for \textsc{CPD-Slow}, with a slightly steeper slope that is probably caused by the fact that we have to store much more information with this solution. The surprising plot is that in Figure~\ref{fig:time4}, because we see that the query time actually decreases as we increase $k$. A possible explanation for this was offered in Section 5.2.
+
+\section{Conclusion}
 
  \begin{thebibliography}{9}
 \bibitem{cole}
