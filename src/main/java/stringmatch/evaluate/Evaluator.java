@@ -27,17 +27,27 @@ public class Evaluator {
   public static final Random random = new Random();
   public static MemoryMeter meter = new MemoryMeter();
   
+  public static final boolean USE_SAME_PARAMS = false;
+  
   public static void evaluateSlowQuery(Text inputText,
       String runtimeOutputFilename, String spaceOutputFilename)
       throws FileNotFoundException {
     List<Pair<Integer, Integer>> paramVals = new ArrayList<Pair<Integer, Integer>>();
-    for (int n = 10000; n <= 50000; n += 10000) {
-      // k doesn't matter in building this tree, but does affect runtime of
-      // queries.
-      for (int k = 0; k <= 30; k += 1) {
-        paramVals.add(new Pair<Integer, Integer>(n, k));
+    if (USE_SAME_PARAMS) {
+      for (int k = 0; k <= 14; k++) {
+        paramVals.add(new Pair<Integer, Integer>(5000, k));
+      }
+    } else {
+      for (int n = 100000; n <= 900000; n += 200000) {
+        // k doesn't matter in building this tree, but does affect runtime of
+        // queries.
+        for (int k = 0; k <= 50; k += 1) {
+          paramVals.add(new Pair<Integer, Integer>(n, k));
+        }
       }
     }
+    
+    int p = USE_SAME_PARAMS ? 30 : 100;
     
     // To control for cache issues, take the first few values in paramVals
     // and put them in front (so they get run twice).
@@ -52,12 +62,13 @@ public class Evaluator {
     Map<Pair<Integer, Integer>, Double> runtime = new HashMap<Pair<Integer, Integer>, Double>();
     Map<Pair<Integer, Integer>, Long> space = new HashMap<Pair<Integer, Integer>, Long>();
     
+    
+    
     System.gc();
     
     for (Pair<Integer, Integer> paramVal : paramVals) {
       int n = paramVal.getLeft();
       int k = paramVal.getRight();
-      int p = Math.max(50, k);
       System.out.println("Running n=" + n + ", k=" + k + ", p=" + p);
       
       long totalTime = 0;
@@ -92,18 +103,24 @@ public class Evaluator {
       runtime.put(paramVal, timePerQuery);
     }
     
-    outputResults(paramVals, runtime, space, runtimeOutputFilename, spaceOutputFilename);
+    outputResults(paramVals, p, runtime, space, runtimeOutputFilename, spaceOutputFilename);
   }
   
   public static void evaluateBigSpace(Text inputText,
       String runtimeOutputFilename, String spaceOutputFilename)
       throws FileNotFoundException {
     List<Pair<Integer, Integer>> paramVals = new ArrayList<Pair<Integer, Integer>>();
-    for (int n = 1600; n >= 400; n -= 400) {
-      // k doesn't matter in building this tree, but does affect runtime of
-      // queries.
-      for (int k = 10; k >= 0; k -= 1) {
-        paramVals.add(new Pair<Integer, Integer>(n, k));
+    if (USE_SAME_PARAMS) {
+      for (int k = 0; k <= 14; k++) {
+        paramVals.add(new Pair<Integer, Integer>(5000, k));
+      }
+    } else {
+      for (int n = 10000; n >= 2000; n -= 2000) {
+        // k doesn't matter in building this tree, but does affect runtime of
+        // queries.
+        for (int k = 12; k >= 0; k -= 1) {
+          paramVals.add(new Pair<Integer, Integer>(n, k));
+        }
       }
     }
     
@@ -117,6 +134,8 @@ public class Evaluator {
       paramVals.add(i, beginningVals.get(i));
     }
     
+    int p = 25;
+    
     // Runs out of space at n=1000, k=12.
         
     Map<Pair<Integer, Integer>, Double> runtime = new HashMap<Pair<Integer, Integer>, Double>();
@@ -127,7 +146,6 @@ public class Evaluator {
     for (Pair<Integer, Integer> paramVal : paramVals) {
       int n = paramVal.getLeft();
       int k = paramVal.getRight();
-      int p = Math.max(25, k);
       System.out.println("Running n=" + n + ", k=" + k + ", p=" + p);
       
       long totalTime = 0;
@@ -162,18 +180,24 @@ public class Evaluator {
       runtime.put(paramVal, timePerQuery);
     }
     
-    outputResults(paramVals, runtime, space, runtimeOutputFilename, spaceOutputFilename);
+    outputResults(paramVals, p, runtime, space, runtimeOutputFilename, spaceOutputFilename);
   }
   
   public static void evaluateCPDSlow(Text inputText,
       String runtimeOutputFilename, String spaceOutputFilename)
       throws FileNotFoundException {
     List<Pair<Integer, Integer>> paramVals = new ArrayList<Pair<Integer, Integer>>();
-    for (int n = 10000; n >= 2000; n -= 2000) {
-      // k doesn't matter in building this tree, but does affect runtime of
-      // queries.
-      for (int k = 16; k >= 0; k -= 1) {
-        paramVals.add(new Pair<Integer, Integer>(n, k));
+    if (USE_SAME_PARAMS) {
+      for (int k = 0; k <= 14; k++) {
+        paramVals.add(new Pair<Integer, Integer>(5000, k));
+      }
+    } else {
+      for (int n = 20000; n >= 4000; n -= 4000) {
+        // k doesn't matter in building this tree, but does affect runtime of
+        // queries.
+        for (int k = 14; k >= 0; k -= 1) {
+          paramVals.add(new Pair<Integer, Integer>(n, k));
+        }
       }
     }
     
@@ -187,6 +211,8 @@ public class Evaluator {
       paramVals.add(i, beginningVals.get(i));
     }
     
+    int p = USE_SAME_PARAMS ? 30 : 30;
+    
     // Note: we use less space than bigspace around n=1000,k=9
     
     Map<Pair<Integer, Integer>, Double> runtime = new HashMap<Pair<Integer, Integer>, Double>();
@@ -197,7 +223,6 @@ public class Evaluator {
     for (Pair<Integer, Integer> paramVal : paramVals) {
       int n = paramVal.getLeft();
       int k = paramVal.getRight();
-      int p = Math.max(25, k);
       System.out.println("Running n=" + n + ", k=" + k + ", p=" + p);
       
       long totalTime = 0;
@@ -233,18 +258,24 @@ public class Evaluator {
       runtime.put(paramVal, timePerQuery);
     }
     
-    outputResults(paramVals, runtime, space, runtimeOutputFilename, spaceOutputFilename);
+    outputResults(paramVals, p, runtime, space, runtimeOutputFilename, spaceOutputFilename);
   }
   
   public static void evaluateCPD(Text inputText,
       String runtimeOutputFilename, String spaceOutputFilename)
       throws FileNotFoundException {
     List<Pair<Integer, Integer>> paramVals = new ArrayList<Pair<Integer, Integer>>();
-    for (int n = 1600; n >= 400; n -= 400) {
-      // k doesn't matter in building this tree, but does affect runtime of
-      // queries.
-      for (int k = 10; k >= 0; k -= 1) {
-        paramVals.add(new Pair<Integer, Integer>(n, k));
+    if (USE_SAME_PARAMS) {
+      for (int k = 14; k >= 0; k--) {
+        paramVals.add(new Pair<Integer, Integer>(5000, k));
+      }
+    } else {
+      for (int n = 10000; n >= 2000; n -= 2000) {
+        // k doesn't matter in building this tree, but does affect runtime of
+        // queries.
+        for (int k = 12; k >= 0; k -= 1) {
+          paramVals.add(new Pair<Integer, Integer>(n, k));
+        }
       }
     }
     
@@ -258,6 +289,8 @@ public class Evaluator {
       paramVals.add(i, beginningVals.get(i));
     }
     
+    int p = USE_SAME_PARAMS ? 30 : 25;
+    
     Map<Pair<Integer, Integer>, Double> runtime = new HashMap<Pair<Integer, Integer>, Double>();
     Map<Pair<Integer, Integer>, Long> space = new HashMap<Pair<Integer, Integer>, Long>();
     
@@ -266,7 +299,6 @@ public class Evaluator {
     for (Pair<Integer, Integer> paramVal : paramVals) {
       int n = paramVal.getLeft();
       int k = paramVal.getRight();
-      int p = Math.max(25 , k);
       System.out.println("Running n=" + n + ", k=" + k + ", p=" + p);
       
       long totalTime = 0;
@@ -303,11 +335,11 @@ public class Evaluator {
       runtime.put(paramVal, timePerQuery);
     }
     
-    outputResults(paramVals, runtime, space, runtimeOutputFilename, spaceOutputFilename);
+    outputResults(paramVals, p, runtime, space, runtimeOutputFilename, spaceOutputFilename);
   }
   
   public static void outputResults(List<Pair<Integer, Integer>> paramVals,
-      Map<Pair<Integer, Integer>, Double> runtime,
+      int pParam, Map<Pair<Integer, Integer>, Double> runtime,
       Map<Pair<Integer, Integer>, Long> space,
       String runtimeOutputFilename, String spaceOutputFilename)
           throws FileNotFoundException {
@@ -328,6 +360,9 @@ public class Evaluator {
     
     PrintWriter pwTime = new PrintWriter(runtimeOutputFilename);
     PrintWriter pwSpace = new PrintWriter(spaceOutputFilename);
+    
+    pwTime.println("p = " + String.valueOf(pParam));
+    pwSpace.println("p = " + String.valueOf(pParam));
     
     String nValsStr = "k";
     for (int n : nValsSorted) {
@@ -385,13 +420,13 @@ public class Evaluator {
   }
   
   public static void main(String[] args) throws FileNotFoundException {
-    String chr1Filename = args[0];
-    String englishCorpusFilename = args[1];
+    //String chr1Filename = args[0];
+    String englishCorpusFilename = args[0];
     
-    Text chr = DataReaders.readFile(chr1Filename, AMOUNT_INPUT_EXTRACTED);
+    //Text chr = DataReaders.readFile(chr1Filename, AMOUNT_INPUT_EXTRACTED);
     Text eng = DataReaders.readFile(englishCorpusFilename, AMOUNT_INPUT_EXTRACTED);
     
-    String outputPath = args[2];
+    String outputPath = args[1];
     
     //evaluateSlowQuery(chr, outputPath + "slowquery_littlealph_time.txt", outputPath + "slowquery_littlealph_space.txt");
     //evaluateSlowQuery(eng, outputPath + "slowquery_bigalph_time.txt", outputPath + "slowquery_bigalph_space.txt");
