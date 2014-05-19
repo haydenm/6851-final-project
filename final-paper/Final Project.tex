@@ -70,8 +70,8 @@ Throughout this paper, for ease of notation, we will interchangeably use $t$ to 
 \fbox{\includegraphics[height = 2in]{figures/banana.png}}
 \fbox{\includegraphics[height = 2in]{figures/bigspace.png}}
 \end{center}
-\label{fig:sample}
 \caption{\small{On the left is the standard suffix tree for $t =$ BANANA. On the right, the suffix tree has been modified to contain a wildcard subtree at the root. Note that the big space, fast query solution requires wildcard subtrees be created between every letter.}}
+\label{fig:sample1}
 \end{figure*}
 
 
@@ -92,8 +92,8 @@ By modifying the suffix tree to store additional information, we can achieve a m
 \fbox{\includegraphics[height = 2in]{figures/centroid.png}}
 \fbox{\includegraphics[height = 2in]{figures/wildcardcentroid.png}}
 \end{center}
-\label{fig:sample}
 \caption{\small{On the left is the standard suffix tree for $t =$ BANANA, with centroid edges highlighted. On the right, the suffix tree has been modified to contain a CPD wildcard subtree at the root.}}
+\label{fig:sample2}
 \end{figure*}
 
 \subsection{Cole et al. Solution 1: Centroid Path Decomposition with Slow Query}
@@ -396,7 +396,7 @@ Richard Cole, Lee-Ad Gottlieb, and Moshe Lewenstein.
  pages 91--100, 2004.
  
  \bibitem{lec}
- Erik Demaifne. Least Common and Level Ancestors. MIT 6.851 Lectures 15 Notes Spring 2014. http://courses.csail.mit.edu/6.851/spring14/lectures/L15.pdf
+ Erik Demaine. Least Common and Level Ancestors. MIT 6.851 Lectures 15 Notes Spring 2014. http://courses.csail.mit.edu/6.851/spring14/lectures/L15.pdf
  
  \bibitem{ukkonenstackoverflow}
  StackOverflow. \textit{Ukkonen's suffix tree algorithm in plain English?} March 2012 --- May 2013. http://stackoverflow.com/questions/9452701/ukkonens-suffix-tree-algorithm-in-plain-english/
